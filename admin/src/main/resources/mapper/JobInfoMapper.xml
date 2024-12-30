@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.admin.mapper.JobInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.common.entity.JobInfo">
+        <id property="jobId" column="job_id" jdbcType="BIGINT"/>
+        <result property="jobName" column="job_name" jdbcType="VARCHAR"/>
+        <result property="cron" column="cron" jdbcType="VARCHAR"/>
+        <result property="processorInfo" column="processor_info" jdbcType="VARCHAR"/>
+        <result property="dispatchStrategy" column="dispatch_strategy" jdbcType="INTEGER"/>
+        <result property="extra" column="extra" jdbcType="VARCHAR"/>
+        <result property="params" column="params" jdbcType="VARCHAR"/>
+        <result property="nextTriggerTime" column="next_trigger_time" jdbcType="BIGINT"/>
+        <result property="maxRetryTimes" column="max_retry_times" jdbcType="INTEGER"/>
+        <result property="createdDate" column="created_date" jdbcType="TIMESTAMP"/>
+        <result property="updatedDate" column="updated_date" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        job_id,job_name,cron,
+        processor_info,dispatch_strategy,extra,
+        params,next_trigger_time,max_retry_times,
+        created_date,updated_date
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_job_info
+        where  job_id = #{jobId,jdbcType=BIGINT}
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from t_job_info
+        where  job_id = #{jobId,jdbcType=BIGINT}
+    </delete>
+
+    <insert id="insert" keyColumn="job_id" keyProperty="jobId" parameterType="com.common.entity.JobInfo" useGeneratedKeys="true">
+        insert into t_job_info
+        (job_name,cron
+        ,processor_info,dispatch_strategy,extra
+        ,params,next_trigger_time,max_retry_times)
+        values (#{jobName,jdbcType=VARCHAR},#{cron,jdbcType=VARCHAR}
+               ,#{processorInfo,jdbcType=VARCHAR},#{dispatchStrategy,jdbcType=INTEGER},#{extra,jdbcType=VARCHAR}
+               ,#{params,jdbcType=VARCHAR},#{nextTriggerTime,jdbcType=BIGINT},#{maxRetryTimes,jdbcType=INTEGER})
+    </insert>
+
+    <insert id="insertSelective" keyColumn="job_id" keyProperty="jobId" parameterType="com.common.entity.JobInfo" useGeneratedKeys="true">
+        insert into t_job_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="jobId != null">job_id,</if>
+            <if test="jobName != null">job_name,</if>
+            <if test="cron != null">cron,</if>
+            <if test="processorInfo != null">processor_info,</if>
+            <if test="dispatchStrategy != null">dispatch_strategy,</if>
+            <if test="extra != null">extra,</if>
+            <if test="params != null">params,</if>
+            <if test="nextTriggerTime != null">next_trigger_time,</if>
+            <if test="maxRetryTimes != null">max_retry_times,</if>
+            <if test="createdDate != null">created_date,</if>
+            <if test="updatedDate != null">updated_date,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="jobId != null">job_id = #{jobId,jdbcType=BIGINT},</if>
+            <if test="jobName != null">job_name = #{jobName,jdbcType=VARCHAR},</if>
+            <if test="cron != null">cron = #{cron,jdbcType=VARCHAR},</if>
+            <if test="processorInfo != null">processor_info = #{processorInfo,jdbcType=VARCHAR},</if>
+            <if test="dispatchStrategy != null">dispatch_strategy = #{dispatchStrategy,jdbcType=INTEGER},</if>
+            <if test="extra != null">extra = #{extra,jdbcType=VARCHAR},</if>
+            <if test="params != null">params = #{params,jdbcType=VARCHAR},</if>
+            <if test="nextTriggerTime != null">next_trigger_time = #{nextTriggerTime,jdbcType=BIGINT},</if>
+            <if test="maxRetryTimes != null">max_retry_times = #{maxRetryTimes,jdbcType=INTEGER},</if>
+            <if test="createdDate != null">created_date = #{createdDate,jdbcType=TIMESTAMP},</if>
+            <if test="updatedDate != null">updated_date = #{updatedDate,jdbcType=TIMESTAMP},</if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.common.entity.JobInfo">
+        update t_job_info
+        <set>
+            <if test="jobName != null">
+                job_name = #{jobName,jdbcType=VARCHAR},
+            </if>
+            <if test="cron != null">
+                cron = #{cron,jdbcType=VARCHAR},
+            </if>
+            <if test="processorInfo != null">
+                processor_info = #{processorInfo,jdbcType=VARCHAR},
+            </if>
+            <if test="dispatchStrategy != null">
+                dispatch_strategy = #{dispatchStrategy,jdbcType=INTEGER},
+            </if>
+            <if test="extra != null">
+                extra = #{extra,jdbcType=VARCHAR},
+            </if>
+            <if test="params != null">
+                params = #{params,jdbcType=VARCHAR},
+            </if>
+            <if test="nextTriggerTime != null">
+                next_trigger_time = #{nextTriggerTime,jdbcType=BIGINT},
+            </if>
+            <if test="maxRetryTimes != null">
+                max_retry_times = #{maxRetryTimes,jdbcType=INTEGER},
+            </if>
+            <if test="createdDate != null">
+                created_date = #{createdDate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatedDate != null">
+                updated_date = #{updatedDate,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where   job_id = #{jobId,jdbcType=BIGINT}
+    </update>
+
+    <update id="updateByPrimaryKey" parameterType="com.common.entity.JobInfo">
+        update t_job_info
+        set
+            job_name =  #{jobName,jdbcType=VARCHAR},
+            cron =  #{cron,jdbcType=VARCHAR},
+            processor_info =  #{processorInfo,jdbcType=VARCHAR},
+            dispatch_strategy =  #{dispatchStrategy,jdbcType=INTEGER},
+            extra =  #{extra,jdbcType=VARCHAR},
+            params =  #{params,jdbcType=VARCHAR},
+            next_trigger_time =  #{nextTriggerTime,jdbcType=BIGINT},
+            max_retry_times =  #{maxRetryTimes,jdbcType=INTEGER},
+            created_date =  #{createdDate,jdbcType=TIMESTAMP},
+            updated_date =  #{updatedDate,jdbcType=TIMESTAMP}
+        where   job_id = #{jobId,jdbcType=BIGINT}
+    </update>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_job_info
+        <where>
+            <if test="jobId != null">
+                and job_id = #{jobId,jdbcType=BIGINT}
+            </if>
+            <if test="jobName != null">
+                and job_name like concat('%',#{jobName,jdbcType=VARCHAR},'%')
+            </if>
+            <if test="cron != null">
+                and cron = #{cron,jdbcType=VARCHAR}
+            </if>
+            <if test="processorInfo != null">
+                and processor_info like concat('%',#{processorInfo,jdbcType=VARCHAR},'%')
+            </if>
+        </where>
+    </select>
+</mapper>

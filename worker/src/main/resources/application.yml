@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: worker
+
+server:
+  port: 8081
+
+vertx-cluster:
+  clusterName: job-flow
+  port: 5702
+  memberList:
+    - 127.0.0.1:5701
