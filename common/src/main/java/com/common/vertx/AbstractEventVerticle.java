@@ -1,10 +1,11 @@
 package com.common.vertx;
 
 import com.alibaba.fastjson2.JSON;
+import com.common.annotation.VerticlePath;
 import com.common.entity.Event;
 import com.common.entity.ServerInfo;
+import com.common.util.AssertUtils;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -13,27 +14,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
 
     private final List<MessageConsumer<String>> consumers = new ArrayList<>();
 
-    public abstract String signature();
-
     public abstract void process(Event<T> event);
-
-    
-    /**
-     * Returns a new instance of DeploymentOptions.
-     *
-     * @return The deployment options.
-     */
-    public DeploymentOptions deploymentOptions() {
-        return new DeploymentOptions();
-    }
-
 
     /**
      * Starts the verticle and initializes necessary components.
@@ -42,7 +30,8 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
      */
     @Override
     public void start() throws Exception {
-        String signature = Objects.requireNonNull(signature(), "Verticle path not be null");
+        String signature = signature();
+        AssertUtils.notEmpty(signature, "Verticle path not be empty");
         String verticlePath = String.format("%s:%s", ServerInfo.getServerAddress(), signature);
 
         Handler<Message<String>> messageHandler = message -> {
@@ -68,6 +57,11 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
     @SuppressWarnings("unchecked")
     protected Class<T> getClassType() {
         return (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+    }
+
+    protected String signature() {
+        VerticlePath verticlePath = getClass().getAnnotation(VerticlePath.class);
+        return Optional.ofNullable(verticlePath).map(VerticlePath::value).orElse("");
     }
 
 }

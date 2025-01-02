@@ -1,10 +1,18 @@
 package com.worker.verticle;
 
-import com.common.entity.Event;
-import com.common.entity.JobInstance;
+import com.alibaba.fastjson2.JSON;
+import com.common.annotation.VerticlePath;
+import com.common.constant.Constant;
+import com.common.entity.*;
 import com.common.vertx.AbstractEventVerticle;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
+import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,75 +21,60 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@VerticlePath(Constant.DISPATCH)
 public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
-    @Override
-    public String signature() {
-        return "";
-    }
+
+    private final Vertx vertx;
+
+    private final HazelcastInstance hazelcast;
+
+    private final JobThreadManager taskThreadManager;
+
+    private final ApplicationContext applicationContext;
+
 
     @Override
     public void process(Event<JobInstance> event) {
+        JobInstance instance = event.getBody();
 
+        // 回执任务已开始
+        event.getMessage().reply(JSON.toJSONString(JobReport.running("开始执行").replenish(instance)));
+        // 异步执行任务 & 绑定执行结果处理回调
+        taskThreadManager.runJob(instance, () -> run(instance), (result, exception) -> {
+            // 任务执行中被停止的情况
+            if (!taskThreadManager.isJobRunning(instance)) {
+                log.warn("RunJobVerticle-warn 任务被人为终止 {} {}", instance.getJobName(), instance.getJobId());
+                return;
+            }
+            if (result != null && exception == null) {
+                vertx.eventBus().send(Constant.DISPATCH_REPORT, result.replenish(instance));
+            } else {
+                vertx.eventBus().send(Constant.DISPATCH_REPORT, JobReport.fail("执行失败", exception).replenish(instance));
+            }
+            taskThreadManager.stopJob(instance, false);
+        });
+        log.info("RunJobVerticle processed jobName = {}", instance.getJobName());
     }
 
-//    private final Vertx vertx;
-//
-//    private final JobThreadManager taskThreadManager;
-//
-//    private final ApplicationContext applicationContext;
-//
-//
-//    @Override
-//    public String path() {
-//        return Constant.DISPATCH;
-//    }
-//
-//    @Override
-//    public void process(Event<JobInstance> event) {
-//        JobInstance instanceTrack = event.getBody();
-//
-//        // 回执任务已开始
-//        event.getMessage().reply(JSON.toJSONString(JobStatusReport.running("开始执行").replenish(instanceTrack)));
-//        // 异步执行任务 & 绑定执行结果处理回调
-//        taskThreadManager.runJob(instanceTrack, () -> run(instanceTrack), (result, exception) -> {
-//            // 任务执行中被停止的情况
-//            if (!taskThreadManager.isJobRunning(instanceTrack)) {
-//                log.warn("RunJobVerticle-warn 任务被人为终止 {} {} {}", accountPeriod, instanceTrack.getJobNode(), instanceTrack.getPresent());
-//                return;
-//            }
-//            if (result != null && exception == null) {
-//                vertx.eventBus().send(JobConstant.DISPATCH_REPORT, result.replenish(instanceTrack));
-//            } else {
-//                vertx.eventBus().send(JobConstant.DISPATCH_REPORT, JobReport.fail("执行失败", exception).replenish(instanceTrack));
-//            }
-//            taskThreadManager.stopJob(instanceTrack);
-//        });
-//        log.info("RunJobVerticle processed accountPeriod = {}", accountPeriod);
-//    }
-//
-//
-//    @SneakyThrows
-//    public JobReport run(JobInstanceTrack instanceTrack) {
-//        // 任务执行中被停止的情况
-//        if (!taskThreadManager.isStateMachineRunning(instanceTrack.getAccountPeriod())) {
-//            throw new IllegalStateException("state machine is not running");
-//        }
-//
-//        Class<?> clazz = Class.forName(instanceTrack.getProcessorInfo());
-//        Object job = applicationContext.getBean(clazz);
-//
-//        // 任务处理器类型校验
-//        if (!(job instanceof JobHandler)) {
-//            throw new IllegalArgumentException("job is not instance of JobHandler");
-//        }
-//
-//        // 整理上下文
-//        IMap<String, Object> workflowContext = vertxFacade.getIMap(instanceTrack.getAccountPeriod());
-//        JobContext jobContext = new JobContext(instanceTrack.getAccountPeriod(), instanceTrack.getParams(), workflowContext);
-//
-//        // 执行任务
-//        JobHandler handler = (JobHandler) job;
-//        return handler.handle(jobContext);
-//    }
+
+    @SneakyThrows
+    public JobReport run(JobInstance instance) {
+        Class<?> clazz = Class.forName(instance.getProcessorInfo());
+        Object job = applicationContext.getBean(clazz);
+
+        // 任务处理器类型校验
+        if (!(job instanceof JobHandler handler)) {
+            throw new IllegalArgumentException("job is not instance of JobHandler");
+        }
+
+        // 整理上下文
+        IMap<String, Object> workflowContext = hazelcast.getMap(String.valueOf(instance.getFlowInstanceId()));
+        JobContext jobContext = new JobContext();
+        BeanUtils.copyProperties(instance, jobContext);
+        jobContext.setWorkflowContext(workflowContext);
+
+        // 执行任务
+        return handler.handle(jobContext);
+    }
 
 }

@@ -13,11 +13,6 @@ public class Constant {
     public static final String FEATURE_HOLDER = "featureHolder";
 
     /**
-     * 任务事件
-     */
-    public static final String JOB_EVENT = "jobEvent";
-
-    /**
      * 任务调度 path
      */
     public static final String DISPATCH = "run.job";

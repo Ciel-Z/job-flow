@@ -10,7 +10,12 @@ import java.time.LocalDateTime;
 public class JobInstanceVO {
 
     /**
-     * ID
+     * 任务实例 ID
+     */
+    private Long id;
+
+    /**
+     * 逻辑任务实例 ID (重试时不变化)
      */
     private Long instanceId;
 

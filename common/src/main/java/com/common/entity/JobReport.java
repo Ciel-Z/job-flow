@@ -9,6 +9,8 @@ import java.io.Serializable;
 @Data
 public class JobReport implements Serializable {
 
+    private JobInstance instance;
+
     /**
      * 执行返回消息
      */
@@ -63,5 +65,10 @@ public class JobReport implements Serializable {
 
     public static JobReport running(String massage) {
         return new JobReport(massage, JobStatusEnum.RUNNING.getCode());
+    }
+
+    public JobReport replenish(JobInstance instance) {
+        this.instance = instance;
+        return this;
     }
 }

@@ -33,6 +33,11 @@ public class JobInstance implements Serializable {
     private Long instanceId;
 
     /**
+     * 任务流实例 ID
+     */
+    private Long flowInstanceId;
+
+    /**
      * 调度测量 (0-轮询, 1-发布, 3-随机, 4-哈希, 5-指定)
      */
     private Integer dispatchStrategy;
@@ -41,6 +46,11 @@ public class JobInstance implements Serializable {
      * 额外信息
      */
     private String extra;
+
+    /**
+     * 处理器信息(节点实现类全路径)
+     */
+    private String processorInfo;
 
     /**
      * 参数

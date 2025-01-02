@@ -4,11 +4,13 @@ import com.alibaba.fastjson2.JSON;
 import com.common.assign.Dispatch;
 import com.common.entity.JobInstance;
 import com.common.util.AssertUtils;
+import com.hazelcast.core.HazelcastInstance;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,9 @@ import java.util.function.BiConsumer;
 public class MessageService {
 
     private final Vertx vertx;
+
+    @Getter
+    private final HazelcastInstance hazelcast;
 
     private final List<Dispatch> assignmentList;
 

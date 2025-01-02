@@ -10,3 +10,10 @@ vertx-cluster:
   port: 5702
   memberList:
     - 127.0.0.1:5701
+
+job-thread-pool:
+  core-pool-size: 5
+  max-pool-size: 10
+  queue-capacity: 100
+  keep-alive-seconds: 60
+  thread-name-prefix: job-thread-pool-

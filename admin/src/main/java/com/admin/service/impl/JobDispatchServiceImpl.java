@@ -40,7 +40,7 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         AssertUtils.notNull(jobInfo, "job not found");
         AssertUtils.notEmpty(jobInfo.getProcessorInfo(), "processorInfo is empty");
 
-        JobInstance instance = instance(jobInfo);
+        JobInstance instance = instance(request, jobInfo);
         jobInstanceMapper.insert(instance);
         messageService.call(Constant.DISPATCH, instance, JobReport.class, (report, e) -> {
             instance.setStatus(Optional.ofNullable(report).map(JobReport::getStatus).orElse(JobStatusEnum.FAIL.getCode()));
@@ -51,6 +51,7 @@ public class JobDispatchServiceImpl implements JobDispatchService {
                     vertx.setTimer(jobInfo.getRetryInterval(), id -> {
                         request.setCurrentRetryTimes(request.getCurrentRetryTimes() + 1);
                         request.setJobInfo(jobInfo);
+                        request.setInstanceId(instance.getInstanceId());
                         start(request);
                     });
                 }
@@ -62,15 +63,25 @@ public class JobDispatchServiceImpl implements JobDispatchService {
 
     @Override
     public void stop(JobInstanceVO jobInstanceVO) {
+        JobInstance jobInstance = jobInstanceMapper.selectByPrimaryKey(jobInstanceVO.getId());
+        AssertUtils.notNull(jobInstance, "jobInstance not found");
+        jobInstance.setStatus(JobStatusEnum.FAIL.getCode());
+        jobInstance.setEndTime(LocalDateTime.now());
+        jobInstance.setResult("强制终止");
+        jobInstanceMapper.updateByPrimaryKey(jobInstance);
 
+        // 修改任务实例全局状态
+        messageService.getHazelcast().getMap(Constant.STATE_MACHINE).put(jobInstance.getId(), JobStatusEnum.FAIL.getCode());
+        // 发布停止任务消息, 通知执行器停止任务
+        messageService.publish(Constant.STOP_JOB, jobInstance);
     }
 
 
-    private JobInstance instance(JobInfo jobInfo) {
+    private JobInstance instance(JobInstanceVO request, JobInfo jobInfo) {
         JobInstance jobInstance = new JobInstance();
         BeanUtils.copyProperties(jobInfo, jobInstance);
         jobInstance.setTriggerTime(LocalDateTime.now());
-        jobInstance.setInstanceId(idGenerateService.allocate());
+        jobInstance.setInstanceId(Optional.ofNullable(request.getInstanceId()).orElse(idGenerateService.allocate()));
         jobInstance.setJobInfo(jobInfo);
         return jobInstance;
     }

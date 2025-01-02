@@ -11,6 +11,7 @@
         <result property="instanceId" column="instance_id" jdbcType="BIGINT"/>
         <result property="dispatchStrategy" column="dispatch_strategy" jdbcType="INTEGER"/>
         <result property="extra" column="extra" jdbcType="VARCHAR"/>
+        <result property="processorInfo" column="processor_info" jdbcType="VARCHAR"/>
         <result property="params" column="params" jdbcType="VARCHAR"/>
         <result property="triggerTime" column="trigger_time" jdbcType="TIMESTAMP"/>
         <result property="replyTime" column="reply_time" jdbcType="TIMESTAMP"/>
@@ -25,9 +26,10 @@
     <sql id="Base_Column_List">
         id,job_id,job_name,
         instance_id,dispatch_strategy,extra,
-        params,trigger_time,reply_time,
-        end_time,last_report_time,result,
-        status,created_date,updated_date
+        processor_info,params,trigger_time,
+        reply_time,end_time,last_report_time,
+        result,status,created_date,
+        updated_date
     </sql>
 
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -41,17 +43,18 @@
         delete from t_job_instance
         where  id = #{id,jdbcType=BIGINT}
     </delete>
+
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobInstance" useGeneratedKeys="true">
         insert into t_job_instance
         ( id,job_id,job_name
         ,instance_id,dispatch_strategy,extra
-        ,params,trigger_time,reply_time
+        ,processor_info,params,trigger_time,reply_time
         ,end_time,last_report_time,result
         ,status,created_date,updated_date
         )
         values (#{id,jdbcType=BIGINT},#{jobId,jdbcType=BIGINT},#{jobName,jdbcType=VARCHAR}
                ,#{instanceId,jdbcType=BIGINT},#{dispatchStrategy,jdbcType=INTEGER},#{extra,jdbcType=VARCHAR}
-               ,#{params,jdbcType=VARCHAR},#{triggerTime,jdbcType=TIMESTAMP},#{replyTime,jdbcType=TIMESTAMP}
+               ,#{processorInfo},#{params,jdbcType=VARCHAR},#{triggerTime,jdbcType=TIMESTAMP},#{replyTime,jdbcType=TIMESTAMP}
                ,#{endTime,jdbcType=TIMESTAMP},#{lastReportTime,jdbcType=BIGINT},#{result,jdbcType=VARCHAR}
                ,#{status,jdbcType=INTEGER},#{createdDate,jdbcType=TIMESTAMP},#{updatedDate,jdbcType=TIMESTAMP}
                )
@@ -65,6 +68,7 @@
             <if test="instanceId != null">instance_id,</if>
             <if test="dispatchStrategy != null">dispatch_strategy,</if>
             <if test="extra != null">extra,</if>
+            <if test="processorInfo != null">processor_info,</if>
             <if test="params != null">params,</if>
             <if test="triggerTime != null">trigger_time,</if>
             <if test="replyTime != null">reply_time,</if>
@@ -82,6 +86,7 @@
             <if test="instanceId != null">instance_id = #{instanceId,jdbcType=BIGINT},</if>
             <if test="dispatchStrategy != null">dispatch_strategy = #{dispatchStrategy,jdbcType=INTEGER},</if>
             <if test="extra != null">extra = #{extra,jdbcType=VARCHAR},</if>
+            <if test="processorInfo != null">processor_info = #{processorInfo,jdbcType=VARCHAR},</if>
             <if test="params != null">params = #{params,jdbcType=VARCHAR},</if>
             <if test="triggerTime != null">trigger_time = #{triggerTime,jdbcType=TIMESTAMP},</if>
             <if test="replyTime != null">reply_time = #{replyTime,jdbcType=TIMESTAMP},</if>
@@ -110,6 +115,9 @@
             </if>
             <if test="extra != null">
                 extra = #{extra,jdbcType=VARCHAR},
+            </if>
+            <if test="processorInfo != null">
+                processor_info = #{processorInfo,jdbcType=VARCHAR},
             </if>
             <if test="params != null">
                 params = #{params,jdbcType=VARCHAR},
@@ -149,6 +157,7 @@
             instance_id =  #{instanceId,jdbcType=BIGINT},
             dispatch_strategy =  #{dispatchStrategy,jdbcType=INTEGER},
             extra =  #{extra,jdbcType=VARCHAR},
+            processor_info =  #{processorInfo,jdbcType=VARCHAR},
             params =  #{params,jdbcType=VARCHAR},
             trigger_time =  #{triggerTime,jdbcType=TIMESTAMP},
             reply_time =  #{replyTime,jdbcType=TIMESTAMP},

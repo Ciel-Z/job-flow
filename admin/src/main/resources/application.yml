@@ -25,5 +25,5 @@ mybatis:
 vertx-cluster:
   clusterName: job-flow
   port: 5701
-  memberList:
+  memberList: # k8s 环境不用配置
     - 127.0.0.1:5702
