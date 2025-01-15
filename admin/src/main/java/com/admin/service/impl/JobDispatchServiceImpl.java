@@ -3,7 +3,7 @@ package com.admin.service.impl;
 import com.admin.mapper.JobInfoMapper;
 import com.admin.mapper.JobInstanceMapper;
 import com.admin.service.JobDispatchService;
-import com.admin.uid.IdGenerateService;
+import com.admin.verticle.MessageDispatcher;
 import com.admin.vo.JobInstanceVO;
 import com.common.constant.Constant;
 import com.common.entity.JobInfo;
@@ -11,15 +11,19 @@ import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
 import com.common.enums.JobStatusEnum;
 import com.common.util.AssertUtils;
-import com.common.vertx.MessageService;
+import com.common.util.PathUtil;
+import com.hazelcast.core.HazelcastInstance;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobDispatchServiceImpl implements JobDispatchService {
@@ -30,59 +34,82 @@ public class JobDispatchServiceImpl implements JobDispatchService {
 
     private final JobInstanceMapper jobInstanceMapper;
 
-    private final IdGenerateService idGenerateService;
+    private final HazelcastInstance hazelcast;
 
-    private final MessageService messageService;
+    private final MessageDispatcher messageDispatcher;
 
     @Override
-    public void start(JobInstanceVO request) {
-        JobInfo jobInfo = Optional.ofNullable(request.getJobInfo()).orElse(jobMapper.selectByPrimaryKey(request.getJobId()));
-        AssertUtils.notNull(jobInfo, "job not found");
-        AssertUtils.notEmpty(jobInfo.getProcessorInfo(), "processorInfo is empty");
+    public void start(Long jobId, String instanceParams, long delayMS) {
+        JobInfo jobInfo = jobMapper.selectByPrimaryKey(jobId);
+        AssertUtils.notNull(jobInfo, "Job not found");
+        AssertUtils.notEmpty(jobInfo.getProcessorInfo(), "ProcessorInfo is empty");
 
-        JobInstance instance = instance(request, jobInfo);
+        JobInstance instance = instance(jobInfo, instanceParams);
+        vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
+            log.info("start job jobId: {}, instanceId: {}", instance.getJobId(), instance.getInstanceId());
+            doStart(instance);
+        });
+    }
+
+
+    public void doStart(JobInstance instance) {
+        instance.setStatus(JobStatusEnum.DISPATCH.getCode());
+        JobInfo jobInfo = instance.getJobInfo();
         jobInstanceMapper.insert(instance);
-        messageService.call(Constant.DISPATCH, instance, JobReport.class, (report, e) -> {
+        messageDispatcher.dispatcher(jobInfo.getProcessorInfo()).doDispatch(instance).request(instance, JobReport.class, (report, e) -> {
             instance.setStatus(Optional.ofNullable(report).map(JobReport::getStatus).orElse(JobStatusEnum.FAIL.getCode()));
-            // retry
+            instance.setResult(Optional.ofNullable(report).map(JobReport::getMassage).orElse(""));
             if (e != null) {
                 instance.setEndTime(LocalDateTime.now());
-                if (request.getCurrentRetryTimes() < jobInfo.getMaxRetryTimes()) {
-                    vertx.setTimer(jobInfo.getRetryInterval(), id -> {
-                        request.setCurrentRetryTimes(request.getCurrentRetryTimes() + 1);
-                        request.setJobInfo(jobInfo);
-                        request.setInstanceId(instance.getInstanceId());
-                        start(request);
+                instance.setResult(e.getMessage());
+                if (instance.getCurrentRetryTimes() < jobInfo.getMaxRetryTimes()) {
+                    // retry
+                    vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
+                        JobInstance nextInstance = instance.clone();
+                        nextInstance.setCurrentRetryTimes(instance.getCurrentRetryTimes() + 1);
+                        doStart(nextInstance);
                     });
                 }
-                // TODO 异常 log 处理
             }
             jobInstanceMapper.updateByPrimaryKey(instance);
         });
     }
 
+
+
     @Override
     public void stop(JobInstanceVO jobInstanceVO) {
         JobInstance jobInstance = jobInstanceMapper.selectByPrimaryKey(jobInstanceVO.getId());
-        AssertUtils.notNull(jobInstance, "jobInstance not found");
+        AssertUtils.notNull(jobInstance, "Instance not found");
+        AssertUtils.isTrue(jobInstance.getStatus() == 1, "The current state does not allow stopping");
         jobInstance.setStatus(JobStatusEnum.FAIL.getCode());
         jobInstance.setEndTime(LocalDateTime.now());
         jobInstance.setResult("强制终止");
         jobInstanceMapper.updateByPrimaryKey(jobInstance);
 
-        // 修改任务实例全局状态
-        messageService.getHazelcast().getMap(Constant.STATE_MACHINE).put(jobInstance.getId(), JobStatusEnum.FAIL.getCode());
-        // 发布停止任务消息, 通知执行器停止任务
-        messageService.publish(Constant.STOP_JOB, jobInstance);
+        // 修改任务实例全局状态 | 任务监控线程上报状态前会检查此状态, 非运行状态时会停止任务线程
+        hazelcast.getMap(Constant.STATE_MACHINE).put(jobInstance.getId(), JobStatusEnum.FAIL.getCode());
+
+        // 实时通知
+        if (StringUtils.hasText(jobInstance.getWorkerAddress())) {
+            // 发送停止任务消息, 通知执行器停止任务
+            messageDispatcher.dispatcher(PathUtil.getGlobalPath(jobInstance.getWorkerAddress(), Constant.STOP_JOB)).send(jobInstance);
+        } else {
+            // 未获取 worker 信息, 发布停止任务消息, 通知执行器停止任务
+            messageDispatcher.dispatcher(Constant.STOP_JOB).publish(jobInstance);
+        }
     }
 
 
-    private JobInstance instance(JobInstanceVO request, JobInfo jobInfo) {
+    private JobInstance instance(JobInfo jobInfo, String instanceParams) {
         JobInstance jobInstance = new JobInstance();
         BeanUtils.copyProperties(jobInfo, jobInstance);
         jobInstance.setTriggerTime(LocalDateTime.now());
-        jobInstance.setInstanceId(Optional.ofNullable(request.getInstanceId()).orElse(idGenerateService.allocate()));
+        long instanceId = hazelcast.getFlakeIdGenerator("JobInstanceId").newId();
+        jobInstance.setInstanceId(instanceId);
+        jobInstance.setParams(Optional.ofNullable(instanceParams).orElse(jobInfo.getParams()));
         jobInstance.setJobInfo(jobInfo);
+        jobInstance.setCurrentRetryTimes(1L);
         return jobInstance;
     }
 }

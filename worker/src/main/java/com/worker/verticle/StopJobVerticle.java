@@ -3,7 +3,7 @@ package com.worker.verticle;
 
 import com.common.annotation.VerticlePath;
 import com.common.constant.Constant;
-import com.common.entity.Event;
+import com.common.entity.JobEvent;
 import com.common.entity.JobInstance;
 import com.common.vertx.AbstractEventVerticle;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class StopJobVerticle extends AbstractEventVerticle<JobInstance> {
     private final JobThreadManager taskThreadManager;
 
     @Override
-    public void process(Event<JobInstance> event) {
-        taskThreadManager.stopJob(event.getBody(), true);
+    public void process(JobEvent<JobInstance> jobEvent) {
+        taskThreadManager.stopJob(jobEvent.getBody(), true);
     }
 }

@@ -5,31 +5,31 @@
 <mapper namespace="com.admin.mapper.JobInstanceMapper">
 
     <resultMap id="BaseResultMap" type="com.common.entity.JobInstance">
-        <id property="id" column="id" jdbcType="BIGINT"/>
-        <result property="jobId" column="job_id" jdbcType="BIGINT"/>
-        <result property="jobName" column="job_name" jdbcType="VARCHAR"/>
-        <result property="instanceId" column="instance_id" jdbcType="BIGINT"/>
-        <result property="dispatchStrategy" column="dispatch_strategy" jdbcType="INTEGER"/>
-        <result property="extra" column="extra" jdbcType="VARCHAR"/>
-        <result property="processorInfo" column="processor_info" jdbcType="VARCHAR"/>
-        <result property="params" column="params" jdbcType="VARCHAR"/>
-        <result property="triggerTime" column="trigger_time" jdbcType="TIMESTAMP"/>
-        <result property="replyTime" column="reply_time" jdbcType="TIMESTAMP"/>
-        <result property="endTime" column="end_time" jdbcType="TIMESTAMP"/>
-        <result property="lastReportTime" column="last_report_time" jdbcType="BIGINT"/>
-        <result property="result" column="result" jdbcType="VARCHAR"/>
-        <result property="status" column="status" jdbcType="INTEGER"/>
-        <result property="createdDate" column="created_date" jdbcType="TIMESTAMP"/>
-        <result property="updatedDate" column="updated_date" jdbcType="TIMESTAMP"/>
+        <id property="id" column="id" />
+        <result property="jobId" column="job_id" />
+        <result property="jobName" column="job_name" />
+        <result property="instanceId" column="instance_id" />
+        <result property="flowInstanceId" column="flow_instance_id" />
+        <result property="dispatchStrategy" column="dispatch_strategy" />
+        <result property="extra" column="extra" />
+        <result property="tag" column="tag" />
+        <result property="processorInfo" column="processor_info" />
+        <result property="params" column="params" />
+        <result property="workerAddress" column="worker_address" />
+        <result property="triggerTime" column="trigger_time" />
+        <result property="replyTime" column="reply_time" />
+        <result property="endTime" column="end_time" />
+        <result property="result" column="result" />
+        <result property="status" column="status" />
+        <result property="createdDate" column="created_date" />
+        <result property="updatedDate" column="updated_date" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,job_id,job_name,
-        instance_id,dispatch_strategy,extra,
-        processor_info,params,trigger_time,
-        reply_time,end_time,last_report_time,
-        result,status,created_date,
-        updated_date
+        id,job_id,job_name,instance_id,flow_instance_id,dispatch_strategy,
+        extra,tag,processor_info,params,worker_address,
+        trigger_time,reply_time,end_time,result,status,
+        created_date,updated_date
     </sql>
 
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -46,18 +46,14 @@
 
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobInstance" useGeneratedKeys="true">
         insert into t_job_instance
-        ( id,job_id,job_name
-        ,instance_id,dispatch_strategy,extra
-        ,processor_info,params,trigger_time,reply_time
-        ,end_time,last_report_time,result
-        ,status,created_date,updated_date
+        ( id,job_id,job_name,instance_id,flow_instance_id,dispatch_strategy,
+          extra,tag,processor_info,params,worker_address,
+          trigger_time,reply_time,end_time,result,status
         )
-        values (#{id,jdbcType=BIGINT},#{jobId,jdbcType=BIGINT},#{jobName,jdbcType=VARCHAR}
-               ,#{instanceId,jdbcType=BIGINT},#{dispatchStrategy,jdbcType=INTEGER},#{extra,jdbcType=VARCHAR}
-               ,#{processorInfo},#{params,jdbcType=VARCHAR},#{triggerTime,jdbcType=TIMESTAMP},#{replyTime,jdbcType=TIMESTAMP}
-               ,#{endTime,jdbcType=TIMESTAMP},#{lastReportTime,jdbcType=BIGINT},#{result,jdbcType=VARCHAR}
-               ,#{status,jdbcType=INTEGER},#{createdDate,jdbcType=TIMESTAMP},#{updatedDate,jdbcType=TIMESTAMP}
-               )
+        values (#{id},#{jobId},#{jobName},#{instanceId},#{flowInstanceId},#{dispatchStrategy},
+                #{extra},#{tag},#{processorInfo},#{params},#{workerAddress},
+                #{triggerTime},#{replyTime},#{endTime},#{result},#{status}
+        )
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobInstance" useGeneratedKeys="true">
         insert into t_job_instance
@@ -66,107 +62,134 @@
             <if test="jobId != null">job_id,</if>
             <if test="jobName != null">job_name,</if>
             <if test="instanceId != null">instance_id,</if>
+            <if test="flowInstanceId != null">flow_instance_id,</if>
             <if test="dispatchStrategy != null">dispatch_strategy,</if>
             <if test="extra != null">extra,</if>
+            <if test="tag != null">tag,</if>
             <if test="processorInfo != null">processor_info,</if>
             <if test="params != null">params,</if>
+            <if test="workerAddress != null">worker_address,</if>
             <if test="triggerTime != null">trigger_time,</if>
             <if test="replyTime != null">reply_time,</if>
             <if test="endTime != null">end_time,</if>
-            <if test="lastReportTime != null">last_report_time,</if>
             <if test="result != null">result,</if>
             <if test="status != null">status,</if>
             <if test="createdDate != null">created_date,</if>
             <if test="updatedDate != null">updated_date,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="id != null">id = #{id,jdbcType=BIGINT},</if>
-            <if test="jobId != null">job_id = #{jobId,jdbcType=BIGINT},</if>
-            <if test="jobName != null">job_name = #{jobName,jdbcType=VARCHAR},</if>
-            <if test="instanceId != null">instance_id = #{instanceId,jdbcType=BIGINT},</if>
-            <if test="dispatchStrategy != null">dispatch_strategy = #{dispatchStrategy,jdbcType=INTEGER},</if>
-            <if test="extra != null">extra = #{extra,jdbcType=VARCHAR},</if>
-            <if test="processorInfo != null">processor_info = #{processorInfo,jdbcType=VARCHAR},</if>
-            <if test="params != null">params = #{params,jdbcType=VARCHAR},</if>
-            <if test="triggerTime != null">trigger_time = #{triggerTime,jdbcType=TIMESTAMP},</if>
-            <if test="replyTime != null">reply_time = #{replyTime,jdbcType=TIMESTAMP},</if>
-            <if test="endTime != null">end_time = #{endTime,jdbcType=TIMESTAMP},</if>
-            <if test="lastReportTime != null">last_report_time = #{lastReportTime,jdbcType=BIGINT},</if>
-            <if test="result != null">result = #{result,jdbcType=VARCHAR},</if>
-            <if test="status != null">status = #{status,jdbcType=INTEGER},</if>
-            <if test="createdDate != null">created_date = #{createdDate,jdbcType=TIMESTAMP},</if>
-            <if test="updatedDate != null">updated_date = #{updatedDate,jdbcType=TIMESTAMP},</if>
+            <if test="id != null">#{id},</if>
+            <if test="jobId != null">#{jobId},</if>
+            <if test="jobName != null">#{jobName},</if>
+            <if test="instanceId != null">#{instanceId},</if>
+            <if test="flowInstanceId != null">#{flowInstanceId},</if>
+            <if test="dispatchStrategy != null">#{dispatchStrategy},</if>
+            <if test="extra != null">#{extra},</if>
+            <if test="tag != null">#{tag},</if>
+            <if test="processorInfo != null">#{processorInfo},</if>
+            <if test="params != null">#{params},</if>
+            <if test="workerAddress != null">#{workerAddress},</if>
+            <if test="triggerTime != null">#{triggerTime},</if>
+            <if test="replyTime != null">#{replyTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="result != null">#{result},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createdDate != null">#{createdDate},</if>
+            <if test="updatedDate != null">#{updatedDate},</if>
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="com.common.entity.JobInstance">
         update t_job_instance
         <set>
             <if test="jobId != null">
-                job_id = #{jobId,jdbcType=BIGINT},
+                job_id = #{jobId},
             </if>
             <if test="jobName != null">
-                job_name = #{jobName,jdbcType=VARCHAR},
+                job_name = #{jobName},
             </if>
             <if test="instanceId != null">
-                instance_id = #{instanceId,jdbcType=BIGINT},
+                instance_id = #{instanceId},
+            </if>
+            <if test="flowInstanceId != null">
+                flow_instance_id = #{flowInstanceId},
             </if>
             <if test="dispatchStrategy != null">
-                dispatch_strategy = #{dispatchStrategy,jdbcType=INTEGER},
+                dispatch_strategy = #{dispatchStrategy},
             </if>
             <if test="extra != null">
-                extra = #{extra,jdbcType=VARCHAR},
+                extra = #{extra},
+            </if>
+            <if test="tag != null">
+                tag = #{tag},
             </if>
             <if test="processorInfo != null">
-                processor_info = #{processorInfo,jdbcType=VARCHAR},
+                processor_info = #{processorInfo},
             </if>
             <if test="params != null">
-                params = #{params,jdbcType=VARCHAR},
+                params = #{params},
+            </if>
+            <if test="workerAddress != null">
+                worker_address = #{workerAddress},
             </if>
             <if test="triggerTime != null">
-                trigger_time = #{triggerTime,jdbcType=TIMESTAMP},
+                trigger_time = #{triggerTime},
             </if>
             <if test="replyTime != null">
-                reply_time = #{replyTime,jdbcType=TIMESTAMP},
+                reply_time = #{replyTime},
             </if>
             <if test="endTime != null">
-                end_time = #{endTime,jdbcType=TIMESTAMP},
-            </if>
-            <if test="lastReportTime != null">
-                last_report_time = #{lastReportTime,jdbcType=BIGINT},
+                end_time = #{endTime},
             </if>
             <if test="result != null">
-                result = #{result,jdbcType=VARCHAR},
+                result = #{result},
             </if>
             <if test="status != null">
-                status = #{status,jdbcType=INTEGER},
+                status = #{status},
             </if>
             <if test="createdDate != null">
-                created_date = #{createdDate,jdbcType=TIMESTAMP},
+                created_date = #{createdDate},
             </if>
             <if test="updatedDate != null">
-                updated_date = #{updatedDate,jdbcType=TIMESTAMP},
+                updated_date = #{updatedDate},
             </if>
         </set>
-        where   id = #{id,jdbcType=BIGINT}
+        where   id = #{id}
     </update>
     <update id="updateByPrimaryKey" parameterType="com.common.entity.JobInstance">
         update t_job_instance
         set
-            job_id =  #{jobId,jdbcType=BIGINT},
-            job_name =  #{jobName,jdbcType=VARCHAR},
-            instance_id =  #{instanceId,jdbcType=BIGINT},
-            dispatch_strategy =  #{dispatchStrategy,jdbcType=INTEGER},
-            extra =  #{extra,jdbcType=VARCHAR},
-            processor_info =  #{processorInfo,jdbcType=VARCHAR},
-            params =  #{params,jdbcType=VARCHAR},
-            trigger_time =  #{triggerTime,jdbcType=TIMESTAMP},
-            reply_time =  #{replyTime,jdbcType=TIMESTAMP},
-            end_time =  #{endTime,jdbcType=TIMESTAMP},
-            last_report_time =  #{lastReportTime,jdbcType=BIGINT},
-            result =  #{result,jdbcType=VARCHAR},
-            status =  #{status,jdbcType=INTEGER},
-            created_date =  #{createdDate,jdbcType=TIMESTAMP},
-            updated_date =  #{updatedDate,jdbcType=TIMESTAMP}
-        where   id = #{id,jdbcType=BIGINT}
+            job_id =  #{jobId},
+            job_name =  #{jobName},
+            instance_id =  #{instanceId},
+            flow_instance_id =  #{flowInstanceId},
+            dispatch_strategy =  #{dispatchStrategy},
+            extra =  #{extra},
+            tag =  #{tag},
+            processor_info =  #{processorInfo},
+            params =  #{params},
+            worker_address =  #{workerAddress},
+            trigger_time =  #{triggerTime},
+            reply_time =  #{replyTime},
+            end_time =  #{endTime},
+            result =  #{result},
+            status =  #{status},
+            created_date =  #{createdDate},
+            updated_date =  #{updatedDate}
+        where   id = #{id}
+    </update>
+
+    <update id="updateByEvent">
+        update t_job_instance
+        <set>
+            worker_address = #{workerAddress,jdbcType=VARCHAR},
+            status = #{status,jdbcType=INTEGER},
+            reply_time = #{timestamp,jdbcType=TIMESTAMP},
+            result = #{result,jdbcType=VARCHAR},
+            updated_date = now()
+            <if test="status > 2">
+                end_time = #{timestamp,jdbcType=TIMESTAMP}
+            </if>
+        </set>
+        where id = #{instance.id,jdbcType=BIGINT}
     </update>
 </mapper>

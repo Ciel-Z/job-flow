@@ -3,6 +3,9 @@ package com.common.entity;
 import com.hazelcast.map.IMap;
 import lombok.Data;
 
+/**
+ * 任务上下文
+ */
 @Data
 public class JobContext {
 

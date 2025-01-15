@@ -6,7 +6,6 @@ import com.admin.mapper.JobInstanceMapper;
 import com.admin.service.JobService;
 import com.admin.vo.JobRequestVO;
 import com.common.entity.JobInfo;
-import com.common.vertx.MessageService;
 import com.github.pagehelper.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,8 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
-
-    private final MessageService messageService;
 
     private final JobInfoMapper jobMapper;
 

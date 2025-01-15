@@ -2,6 +2,7 @@ package com.common.entity;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -11,7 +12,8 @@ import java.time.LocalDateTime;
  * @TableName t_job_instance
  */
 @Data
-public class JobInstance implements Serializable {
+public class JobInstance implements Serializable, Cloneable {
+
     /**
      * ID
      */
@@ -38,7 +40,7 @@ public class JobInstance implements Serializable {
     private Long flowInstanceId;
 
     /**
-     * 调度测量 (0-轮询, 1-发布, 3-随机, 4-哈希, 5-指定)
+     * 调度策略 (1-轮询, 2-随机, 3-hash, 4-指定)
      */
     private Integer dispatchStrategy;
 
@@ -46,6 +48,11 @@ public class JobInstance implements Serializable {
      * 额外信息
      */
     private String extra;
+
+    /**
+     * worker tag
+     */
+    private String tag;
 
     /**
      * 处理器信息(节点实现类全路径)
@@ -58,12 +65,17 @@ public class JobInstance implements Serializable {
     private String params;
 
     /**
+     * Worker地址
+     */
+    private String workerAddress;
+
+    /**
      * 触发时间
      */
     private LocalDateTime triggerTime;
 
     /**
-     * 响应时间
+     * 最后上报时间
      */
     private LocalDateTime replyTime;
 
@@ -73,17 +85,12 @@ public class JobInstance implements Serializable {
     private LocalDateTime endTime;
 
     /**
-     * 最后上报时间
-     */
-    private Long lastReportTime;
-
-    /**
      * 结果
      */
     private String result;
 
     /**
-     * 执行状态（0-等待Worker接收 1-运行中 2-失败 3-成功 4-暂停 5-停止中）
+     * 执行状态（0-等待Worker接收 1-运行中 2-失败 3-成功 4-暂停）
      */
     private Integer status;
 
@@ -97,10 +104,32 @@ public class JobInstance implements Serializable {
      */
     private LocalDateTime updatedDate;
 
+
+    //>>>> 以下为非数据库字段
+
     /**
      * 任务信息
      */
     private JobInfo jobInfo;
 
+    /**
+     * 当前重试次数
+     */
+    private Long currentRetryTimes;
+
+    @Override
+    public JobInstance clone() {
+        try {
+            JobInstance clone = (JobInstance) super.clone();
+            clone.setId(null);
+            clone.setEndTime(null);
+            clone.setResult(null);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
+
+    @Serial
     private static final long serialVersionUID = 1L;
 }

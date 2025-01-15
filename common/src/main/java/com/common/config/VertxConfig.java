@@ -84,7 +84,7 @@ public class VertxConfig {
 
     @Bean
     @DependsOn("vertx")
-    public HazelcastInstance hazelcastInstance(HazelcastClusterManager clusterManager) {
+    public HazelcastInstance hazelcast(HazelcastClusterManager clusterManager) {
         return clusterManager.getHazelcastInstance();
     }
 

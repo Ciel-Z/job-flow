@@ -2,12 +2,17 @@ package com.common.entity;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.time.LocalDateTime;
 
+/**
+ * 任务信息表
+ * @TableName t_job_info
+ */
 @Data
 public class JobInfo implements java.io.Serializable {
     /**
-     * 任务ID
+     * ID
      */
     private Long jobId;
 
@@ -27,7 +32,7 @@ public class JobInfo implements java.io.Serializable {
     private String processorInfo;
 
     /**
-     * 调度测量 (0-轮询, 1-发布, 3-随机, 4-哈希, 5-指定)
+     * 调度策略 (1-轮询, 2-随机, 3-hash, 4-指定)
      */
     private Integer dispatchStrategy;
 
@@ -35,6 +40,11 @@ public class JobInfo implements java.io.Serializable {
      * 额外信息
      */
     private String extra;
+
+    /**
+     * worker tag
+     */
+    private String tag;
 
     /**
      * 参数
@@ -52,7 +62,7 @@ public class JobInfo implements java.io.Serializable {
     private Integer maxRetryTimes;
 
     /**
-     * 重试间隔
+     * 重试间隔(毫秒)
      */
     private Integer retryInterval;
 
@@ -66,5 +76,6 @@ public class JobInfo implements java.io.Serializable {
      */
     private LocalDateTime updatedDate;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

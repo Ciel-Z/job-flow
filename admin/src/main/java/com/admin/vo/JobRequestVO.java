@@ -16,6 +16,11 @@ public class JobRequestVO {
     private String jobName;
 
     /**
+     * worker 节点 tag
+     */
+    private String tag;
+
+    /**
      * corn 表达式
      */
     private String cron;
@@ -24,15 +29,5 @@ public class JobRequestVO {
      * 节点实现类全路径
      */
     private String processorInfo;
-
-    /**
-     * 任务参数
-     */
-    private String params;
-
-    /**
-     * 最大重试次数
-     */
-    private String maxRetryTimes;
 
 }

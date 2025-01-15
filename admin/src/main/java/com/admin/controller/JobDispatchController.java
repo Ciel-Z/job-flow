@@ -3,11 +3,9 @@ package com.admin.controller;
 import com.admin.entity.Result;
 import com.admin.service.JobDispatchService;
 import com.admin.vo.JobInstanceVO;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -17,14 +15,11 @@ public class JobDispatchController extends BaseController{
 
     private final JobDispatchService jobDispatchService;
 
-    // Long jobId, String instanceParams, long delayMS
 
-    @PostMapping("/start")
-    public Mono<Result<String>> start(@RequestBody JobInstanceVO jobInstanceVO) {
-        if (jobInstanceVO.getJobId() == null) {
-            return Mono.just(Result.error("jobId is null"));
-        }
-        jobDispatchService.start(jobInstanceVO);
+    @GetMapping("/start/{jobId}")
+    public Mono<Result<String>> start(@PathVariable("jobId") Long jobId, @RequestParam(value = "instanceParams", required = false, defaultValue = "#{null}") String instanceParams
+            , @RequestParam(value = "delayMS", required = false, defaultValue = "0") Long delayMS, HttpServletRequest request) {
+        jobDispatchService.start(jobId, instanceParams, delayMS);
         return Mono.just(Result.success("Published job"));
     }
 

@@ -5,6 +5,7 @@ import com.common.enums.JobStatusEnum;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 public class JobReport implements Serializable {
@@ -17,7 +18,7 @@ public class JobReport implements Serializable {
     private String massage;
 
     /**
-     * 执行状态
+     * 执行状态（0-等待Worker接收 1-运行中 2-失败 3-成功 4-暂停 5-停止中）
      */
     private Integer status;
 
@@ -29,20 +30,20 @@ public class JobReport implements Serializable {
     /**
      * 处理节点地址
      */
-    private String workerAddress;
+    private String workerAddress = ServerInfo.getServerAddress();
+
+    /**
+     * 时间戳
+     */
+    private LocalDateTime timestamp = LocalDateTime.now();
 
 
-    private JobReport() {
-        this.workerAddress = ServerInfo.getServerAddress();
-    }
-
-    public JobReport(String massage, Integer status) {
-        this();
+    private JobReport(String massage, Integer status) {
         this.massage = massage;
         this.status = status;
     }
 
-    public JobReport(String massage, Integer status, Throwable throwable) {
+    private JobReport(String massage, Integer status, Throwable throwable) {
         this(massage, status);
         this.throwable = throwable;
     }

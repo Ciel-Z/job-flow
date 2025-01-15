@@ -1,6 +1,7 @@
 package com.admin.mapper;
 
 import com.common.entity.JobInstance;
+import com.common.entity.JobReport;
 import org.apache.ibatis.annotations.Delete;
 
 /**
@@ -25,4 +26,6 @@ public interface JobInstanceMapper {
 
     @Delete("delete from t_job_instance where job_id = #{jobId}")
     void deleteByJobId(Long jobId);
+
+    void updateByEvent(JobReport jobReport);
 }

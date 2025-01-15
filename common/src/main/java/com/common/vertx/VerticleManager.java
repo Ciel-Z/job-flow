@@ -1,7 +1,7 @@
 package com.common.vertx;
 
+import com.common.config.VerticleMappingManager;
 import com.common.config.VertxConfiguration;
-import com.common.constant.Constant;
 import com.common.entity.ServerInfo;
 import com.hazelcast.core.HazelcastInstance;
 import io.vertx.core.Vertx;
@@ -22,9 +22,11 @@ public class VerticleManager {
 
     private final Vertx vertx;
 
-    private final HazelcastInstance hazelcastInstance;
+    private final HazelcastInstance hazelcast;
 
     private final Set<AbstractEventVerticle<?>> verticleSet;
+
+    private final VerticleMappingManager verticleMappingManager;
 
 
     /**
@@ -35,9 +37,8 @@ public class VerticleManager {
         for (AbstractEventVerticle<?> verticle : verticleSet) {
             // Deploy the verticle
             vertx.deployVerticle(verticle);
-
-            // Added path and ip mapping
-            hazelcastInstance.getMultiMap(Constant.FEATURE_HOLDER).put(verticle.signature(), ServerInfo.getServerAddress());
+            // Register the mapping (ensure dispatch ability)
+            verticleMappingManager.register(ServerInfo.getIp(), verticle.fullAddress());
         }
         log.info("VerticleManager Verticles deployed");
     }
@@ -51,7 +52,7 @@ public class VerticleManager {
         // Undeploy all verticles
         verticleSet.forEach(AbstractEventVerticle::destroy);
         // Shutdown the Hazelcast instance
-        hazelcastInstance.shutdown();
+        hazelcast.shutdown();
         // Close the Vertx instance
         vertx.close();
     }

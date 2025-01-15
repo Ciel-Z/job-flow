@@ -34,7 +34,7 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
 
 
     @Override
-    public void process(Event<JobInstance> event) {
+    public void process(JobEvent<JobInstance> event) {
         JobInstance instance = event.getBody();
 
         // 回执任务已开始

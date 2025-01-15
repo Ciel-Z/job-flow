@@ -2,9 +2,9 @@ package com.common.vertx;
 
 import com.alibaba.fastjson2.JSON;
 import com.common.annotation.VerticlePath;
-import com.common.entity.Event;
-import com.common.entity.ServerInfo;
+import com.common.entity.JobEvent;
 import com.common.util.AssertUtils;
+import com.common.util.PathUtil;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
@@ -21,27 +21,24 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
 
     private final List<MessageConsumer<String>> consumers = new ArrayList<>();
 
-    public abstract void process(Event<T> event);
+    public abstract void process(JobEvent<T> jobEvent);
 
     /**
      * Starts the verticle and initializes necessary components.
-     *
-     * @throws Exception if an error occurs during the start process
      */
     @Override
-    public void start() throws Exception {
-        String signature = signature();
-        AssertUtils.notEmpty(signature, "Verticle path not be empty");
-        String verticlePath = String.format("%s:%s", ServerInfo.getServerAddress(), signature);
+    public void start() {
+        String address = address();
+        String verticlePath = fullAddress();
 
         Handler<Message<String>> messageHandler = message -> {
             log.info("Verticle-path:{} accept: {}", verticlePath, message.body());
             T t = JSON.parseObject(message.body(), getClassType());
             // process business in a non-blocking
-            process(new Event<>(t, message));
+            process(new JobEvent<>(t, message));
         };
 
-        consumers.add(vertx.eventBus().consumer(signature, messageHandler));
+        consumers.add(vertx.eventBus().consumer(address, messageHandler));
         consumers.add(vertx.eventBus().consumer(verticlePath, messageHandler));
     }
 
@@ -54,14 +51,20 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
     }
 
 
+    public String address() {
+        VerticlePath verticlePath = getClass().getAnnotation(VerticlePath.class);
+        String address = Optional.ofNullable(verticlePath).map(VerticlePath::value).orElse("");
+        AssertUtils.notEmpty(address, "{} Verticle missing @VerticlePath annotation or value is empty", getClass().getName());
+        return address;
+    }
+
+    public String fullAddress() {
+        return PathUtil.getGlobalPath(address());
+    }
+
+
     @SuppressWarnings("unchecked")
-    protected Class<T> getClassType() {
+    private Class<T> getClassType() {
         return (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
-
-    protected String signature() {
-        VerticlePath verticlePath = getClass().getAnnotation(VerticlePath.class);
-        return Optional.ofNullable(verticlePath).map(VerticlePath::value).orElse("");
-    }
-
 }

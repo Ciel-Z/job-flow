@@ -5,7 +5,7 @@ import com.admin.vo.JobInstanceVO;
 
 public interface JobDispatchService {
 
-    void start(JobInstanceVO jobInstanceVO);
+    void start(Long jobId, String instanceParams, long delayMS);
 
     void stop(JobInstanceVO jobInstanceVO);
 

@@ -3,24 +3,24 @@ package com.common.constant;
 public class Constant {
 
     /**
-     * 在线节点
-     */
-    public static final String ONLINE_NODES = "onlineNode";
-
-    /**
-     * 特性所有者
+     * 特性所属节点
      */
     public static final String FEATURE_HOLDER = "featureHolder";
 
     /**
+     * 节点所属节点
+     */
+    public static final String NODE_HOLDER = "nodeHolder";
+
+    /**
      * 任务调度 path
      */
-    public static final String DISPATCH = "run.job";
+    public static final String DISPATCH = "worker:run:job";
 
     /**
      * 任务调度报告 path
      */
-    public static final String DISPATCH_REPORT = "job.report";
+    public static final String DISPATCH_REPORT = "worker:job:report";
 
     /**
      * 任务调度停止 path

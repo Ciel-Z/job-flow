@@ -4,14 +4,14 @@ import com.common.constant.Constant;
 import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.worker.config.JobThreadConfigure;
+import com.worker.config.WorkerConfigure;
 import io.vertx.core.Vertx;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 import java.util.Optional;
@@ -20,13 +20,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 @Slf4j
-@Component
+@Configuration
 @RequiredArgsConstructor
 public class JobThreadManager {
 
     private final Vertx vertx;
 
-    private final JobThreadConfigure configure;
+    private final WorkerConfigure configure;
 
     private ExecutorService jobExecutor;
 
@@ -37,12 +37,14 @@ public class JobThreadManager {
     @PostConstruct
     private void init() {
         // 任务线程池
-        ThreadFactory jobFactory = new ThreadFactoryBuilder().setNameFormat("job-worker-%d").build();
-        jobExecutor = new ThreadPoolExecutor(configure.getCorePoolSize(), configure.getMaxPoolSize(), configure.getKeepAliveSeconds(), TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(configure.getQueueCapacity()), jobFactory);
+        WorkerConfigure.JobThreadConfigure jobThreadPool = configure.getJobThreadPool();
+        ThreadFactory jobFactory = new ThreadFactoryBuilder().setNameFormat(jobThreadPool.getThreadNameFormat()).build();
+        ArrayBlockingQueue<Runnable> taskQueue = new ArrayBlockingQueue<>(jobThreadPool.getQueueCapacity());
+        jobExecutor = new ThreadPoolExecutor(jobThreadPool.getCorePoolSize(), jobThreadPool.getMaxPoolSize(), jobThreadPool.getKeepAliveSeconds(), TimeUnit.MILLISECONDS, taskQueue, jobFactory);
 
         // 任务监控线程池
         final int availableProcessors = Runtime.getRuntime().availableProcessors();
-        ThreadFactory monitorFactory = new ThreadFactoryBuilder().setNameFormat("job-worker-monitor-%d").build();
+        ThreadFactory monitorFactory = new ThreadFactoryBuilder().setNameFormat(String.join("-", "monitor", jobThreadPool.getThreadNameFormat())).build();
         monitorExecutor = new ScheduledThreadPoolExecutor(availableProcessors, monitorFactory);
 
         jobMap = new ConcurrentHashMap<>();

@@ -1,1 +1,8 @@
-spring.application.name=cluster
+hazelcast:
+  network:
+    join:
+      tcp-ip:
+        enabled: true
+    heartbeat:
+      interval-seconds: 10 # 心跳间隔
+  max-no-heartbeat-seconds: 60 # 离线时间

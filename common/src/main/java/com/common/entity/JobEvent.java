@@ -4,9 +4,10 @@ import io.vertx.core.eventbus.Message;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+
 @Data
 @AllArgsConstructor
-public class Event<T> {
+public class JobEvent<T> {
 
     private T body;
 

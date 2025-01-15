@@ -1,12 +1,11 @@
 package com.common.listener;
 
-import com.common.constant.Constant;
 import com.common.entity.ServerInfo;
+import com.common.config.VerticleMappingManager;
+import com.hazelcast.cluster.Address;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.cluster.MembershipEvent;
 import com.hazelcast.cluster.MembershipListener;
-import com.hazelcast.core.HazelcastInstance;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -18,9 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NodeMembershipListener implements MembershipListener {
 
-    private final ServerInfo serverInfo;
-
-    private final HazelcastInstance hazelcast;
+    private final VerticleMappingManager verticleMappingManager;
 
     @Override
     public void memberAdded(MembershipEvent event) {
@@ -31,12 +28,9 @@ public class NodeMembershipListener implements MembershipListener {
     @Override
     public void memberRemoved(MembershipEvent event) {
         Member removedMember = event.getMember();
-        log.info("Node leave: {}", removedMember.getAddress());
-        hazelcast.getSet(Constant.ONLINE_NODES).remove(removedMember.getAddress());
-    }
-
-    @PostConstruct
-    public void init() {
-        hazelcast.getSet(Constant.ONLINE_NODES).add(serverInfo.getIp());
+        Address address = removedMember.getAddress();
+        String ip = String.format("%s:%s", address.getHost(), address.getPort());
+        log.info("Node leave: {}", ip);
+        verticleMappingManager.unregister(ip);
     }
 }
