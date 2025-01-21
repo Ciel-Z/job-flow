@@ -1,8 +1,6 @@
 package com.common.vertx;
 
-import com.common.config.VerticleMappingManager;
 import com.common.config.VertxConfiguration;
-import com.common.entity.ServerInfo;
 import com.hazelcast.core.HazelcastInstance;
 import io.vertx.core.Vertx;
 import jakarta.annotation.PostConstruct;
@@ -26,9 +24,6 @@ public class VerticleManager {
 
     private final Set<AbstractEventVerticle<?>> verticleSet;
 
-    private final VerticleMappingManager verticleMappingManager;
-
-
     /**
      * Registers and deploys all AbstractVerticle beans in the application context to the Vertx instance.
      */
@@ -37,8 +32,6 @@ public class VerticleManager {
         for (AbstractEventVerticle<?> verticle : verticleSet) {
             // Deploy the verticle
             vertx.deployVerticle(verticle);
-            // Register the mapping (ensure dispatch ability)
-            verticleMappingManager.register(ServerInfo.getIp(), verticle.fullAddress());
         }
         log.info("VerticleManager Verticles deployed");
     }

@@ -58,18 +58,18 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         jobInstanceMapper.insert(instance);
         messageDispatcher.dispatcher(jobInfo.getProcessorInfo()).doDispatch(instance).request(instance, JobReport.class, (report, e) -> {
             instance.setStatus(Optional.ofNullable(report).map(JobReport::getStatus).orElse(JobStatusEnum.FAIL.getCode()));
-            instance.setResult(Optional.ofNullable(report).map(JobReport::getMassage).orElse(""));
+            instance.setResult(Optional.ofNullable(report).map(JobReport::getResult).orElse(""));
             if (e != null) {
                 instance.setEndTime(LocalDateTime.now());
                 instance.setResult(e.getMessage());
-                if (instance.getCurrentRetryTimes() < jobInfo.getMaxRetryTimes()) {
-                    // retry
-                    vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
-                        JobInstance nextInstance = instance.clone();
-                        nextInstance.setCurrentRetryTimes(instance.getCurrentRetryTimes() + 1);
-                        doStart(nextInstance);
-                    });
-                }
+//                if (instance.getCurrentRetryTimes() < jobInfo.getMaxRetryTimes()) {
+//                    // retry
+//                    vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
+//                        JobInstance nextInstance = instance.clone();
+//                        nextInstance.setCurrentRetryTimes(instance.getCurrentRetryTimes() + 1);
+//                        doStart(nextInstance);
+//                    });
+//                }
             }
             jobInstanceMapper.updateByPrimaryKey(instance);
         });

@@ -15,7 +15,7 @@ public class JobReport implements Serializable {
     /**
      * 执行返回消息
      */
-    private String massage;
+    private String result;
 
     /**
      * 执行状态（0-等待Worker接收 1-运行中 2-失败 3-成功 4-暂停 5-停止中）
@@ -30,7 +30,7 @@ public class JobReport implements Serializable {
     /**
      * 处理节点地址
      */
-    private String workerAddress = ServerInfo.getServerAddress();
+    private String workerAddress = NodeInfo.getServerAddress();
 
     /**
      * 时间戳
@@ -38,13 +38,13 @@ public class JobReport implements Serializable {
     private LocalDateTime timestamp = LocalDateTime.now();
 
 
-    private JobReport(String massage, Integer status) {
-        this.massage = massage;
+    private JobReport(String result, Integer status) {
+        this.result = result;
         this.status = status;
     }
 
-    private JobReport(String massage, Integer status, Throwable throwable) {
-        this(massage, status);
+    private JobReport(String result, Integer status, Throwable throwable) {
+        this(result, status);
         this.throwable = throwable;
     }
 

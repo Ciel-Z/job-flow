@@ -13,6 +13,11 @@ public class Constant {
     public static final String NODE_HOLDER = "nodeHolder";
 
     /**
+     * 节点列表
+     */
+    public static final String NODE_LIST = "NodeList";
+
+    /**
      * 任务调度 path
      */
     public static final String DISPATCH = "worker:run:job";
@@ -25,7 +30,7 @@ public class Constant {
     /**
      * 任务调度停止 path
      */
-    public static final String STOP_JOB = "stop.job";
+    public static final String STOP_JOB = "worker:stop:job";
 
     /**
      * 任务状态机

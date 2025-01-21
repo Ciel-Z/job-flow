@@ -24,7 +24,7 @@ public class HashDispatch implements Dispatch {
 
     @Override
     public String dispatch(String address, JobInstance instance) {
-        List<String> available = getAvailable(address, instance.getProcessorInfo());
+        List<String> available = getAvailable(address, instance.getTag());
         AssertUtils.notEmpty(available, "No available nodes for signature: " + address);
         return available.get(HashUtil.hashCode(instance.getJobId()) & (available.size() - 1));
     }

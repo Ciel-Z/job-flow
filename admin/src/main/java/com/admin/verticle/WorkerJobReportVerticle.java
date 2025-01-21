@@ -31,7 +31,7 @@ public class WorkerJobReportVerticle extends AbstractEventVerticle<JobReport> {
         log.info("WorkerJObReport {} instanceId = {} worker = {} jobReport = {}", jobInfo.getJobName(), jobReport.getInstance().getInstanceId(), jobEvent.getMessage().replyAddress(), jobReport);
 
         Vertx vertx = getVertx();
-        // 使用 executeBlocking 处理阻塞任务
+        // executeBlocking 处理阻塞任务
         vertx.executeBlocking((Callable<Void>) () -> {
             // update job instance info
             jobInstanceMapper.updateByEvent(jobReport);

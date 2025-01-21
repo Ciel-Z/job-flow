@@ -1,6 +1,6 @@
 package com.common.config;
 
-import com.common.entity.ServerInfo;
+import com.common.entity.NodeInfo;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
@@ -74,7 +74,7 @@ public class VertxConfig {
                 String nodeId = localMember.getUuid().toString();
                 String host = localMember.getAddress().getHost();
                 int port = localMember.getAddress().getPort();
-                ServerInfo.instance(nodeId, host, port);
+                NodeInfo.of(nodeId, host, port);
                 log.info("Vertx instance deployed successfully local IP: {}:{}", host, port);
             }
         });

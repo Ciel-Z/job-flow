@@ -27,13 +27,13 @@ public class PollIngDispatch implements Dispatch {
 
     @Override
     public String dispatch(String address, JobInstance instance) {
-        List<String> nodes = getAvailable(address, instance.getProcessorInfo());
+        List<String> nodes = getAvailable(address, instance.getTag());
         if (nodes.isEmpty()) {
-            log.warn("No available worker nodes for processorInfo: {}", instance.getProcessorInfo());
+            log.warn("No available worker nodes for processorInfo: {}", instance.getTag());
             return address;
         }
         long offset = counter.getAndAdd(1);
-        String host = nodes.get((int) (offset & nodes.size()));
-        return workerAddress(host, address);
+        String workerAddress = nodes.get((int) (offset % nodes.size()));
+        return workerAddress;
     }
 }

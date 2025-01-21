@@ -3,6 +3,7 @@ package com.common.vertx;
 import com.alibaba.fastjson2.JSON;
 import com.common.annotation.VerticlePath;
 import com.common.entity.JobEvent;
+import com.common.entity.JobReport;
 import com.common.util.AssertUtils;
 import com.common.util.PathUtil;
 import io.vertx.core.AbstractVerticle;
@@ -37,7 +38,6 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
             // process business in a non-blocking
             process(new JobEvent<>(t, message));
         };
-
         consumers.add(vertx.eventBus().consumer(address, messageHandler));
         consumers.add(vertx.eventBus().consumer(verticlePath, messageHandler));
     }
@@ -50,6 +50,10 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
         consumers.forEach(MessageConsumer::unregister);
     }
 
+
+    protected void send(String address, JobReport jobReport) {
+        vertx.eventBus().send(address, JSON.toJSONString(jobReport));
+    }
 
     public String address() {
         VerticlePath verticlePath = getClass().getAnnotation(VerticlePath.class);

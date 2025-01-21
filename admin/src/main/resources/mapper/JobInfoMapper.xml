@@ -42,8 +42,8 @@
         insert into t_job_info
         ( job_name,cron,processor_info,dispatch_strategy,extra,
           tag,params,next_trigger_time,max_retry_times,retry_interval)
-        values (#{jobName},#{cron},#{processorInfo},#{dispatchStrategy},#{extra},
-            #{tag},#{params},#{nextTriggerTime},#{maxRetryTimes},#{retryInterval}
+        values (#{jobName}, #{cron}, #{processorInfo}, #{dispatchStrategy}, #{extra},
+                #{tag}, #{params}, #{nextTriggerTime}, #{maxRetryTimes}, #{retryInterval})
     </insert>
 
     <insert id="insertSelective" keyColumn="job_id" keyProperty="jobId" parameterType="com.common.entity.JobInfo" useGeneratedKeys="true">

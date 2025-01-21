@@ -2,23 +2,40 @@ package com.common.entity;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class NodeInfo {
 
-    /**
-     * vertx 可调度的地址
-     */
-    private String address;
+    private String id;
+    private String ip;
+    private Integer port;
+    private LocalDateTime timestamp; // last update time
 
-    /**
-     * 节点标签 | 进行更细粒度的调度
-     */
-    private String tag;
-
-    public static NodeInfo of(String address, String tag) {
-        NodeInfo node = new NodeInfo();
-        node.setAddress(address);
-        node.setTag(tag);
-        return node;
+    private NodeInfo() {
     }
+
+    private static final NodeInfo INFO = new NodeInfo();
+
+    public static void of(String id, String ip, Integer port) {
+        INFO.id = id;
+        INFO.ip = ip;
+        INFO.port = port;
+    }
+
+    public static NodeInfo getNowTimeStamp() {
+        INFO.timestamp = LocalDateTime.now();
+        return INFO;
+    }
+
+
+    public static NodeInfo getInfo() {
+        return INFO;
+    }
+
+
+    public static String getServerAddress() {
+        return String.format("%s:%s", INFO.ip, INFO.port);
+    }
+
 }

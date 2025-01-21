@@ -3,7 +3,6 @@ package com.admin.controller;
 import com.admin.entity.Result;
 import com.admin.service.JobDispatchService;
 import com.admin.vo.JobInstanceVO;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -18,7 +17,7 @@ public class JobDispatchController extends BaseController{
 
     @GetMapping("/start/{jobId}")
     public Mono<Result<String>> start(@PathVariable("jobId") Long jobId, @RequestParam(value = "instanceParams", required = false, defaultValue = "#{null}") String instanceParams
-            , @RequestParam(value = "delayMS", required = false, defaultValue = "0") Long delayMS, HttpServletRequest request) {
+            , @RequestParam(value = "delayMS", required = false, defaultValue = "0") Long delayMS) {
         jobDispatchService.start(jobId, instanceParams, delayMS);
         return Mono.just(Result.success("Published job"));
     }

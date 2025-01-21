@@ -25,7 +25,7 @@ public class RandomDispatch implements Dispatch {
 
     @Override
     public String dispatch(String address, JobInstance instance) {
-        List<String> nodes = getAvailable(address, instance.getProcessorInfo());
+        List<String> nodes = getAvailable(address, instance.getTag());
         AssertUtils.notEmpty(nodes, "No available nodes for signature: " + address);
         String host = nodes.get(new Random().nextInt(nodes.size()));
         return workerAddress(host, address);

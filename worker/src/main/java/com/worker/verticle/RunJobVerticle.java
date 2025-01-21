@@ -7,7 +7,6 @@ import com.common.entity.*;
 import com.common.vertx.AbstractEventVerticle;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +23,6 @@ import org.springframework.stereotype.Component;
 @VerticlePath(Constant.DISPATCH)
 public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
 
-    private final Vertx vertx;
-
     private final HazelcastInstance hazelcast;
 
     private final JobThreadManager taskThreadManager;
@@ -36,7 +33,6 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
     @Override
     public void process(JobEvent<JobInstance> event) {
         JobInstance instance = event.getBody();
-
         // 回执任务已开始
         event.getMessage().reply(JSON.toJSONString(JobReport.running("开始执行").replenish(instance)));
         // 异步执行任务 & 绑定执行结果处理回调
@@ -46,14 +42,15 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
                 log.warn("RunJobVerticle-warn 任务被人为终止 {} {}", instance.getJobName(), instance.getJobId());
                 return;
             }
+            log.info("RunJobVerticle processed {} jobName = {}", instance.getProcessorInfo(), instance.getJobName());
             if (result != null && exception == null) {
-                vertx.eventBus().send(Constant.DISPATCH_REPORT, result.replenish(instance));
+                send(Constant.DISPATCH_REPORT, result.replenish(instance));
             } else {
-                vertx.eventBus().send(Constant.DISPATCH_REPORT, JobReport.fail("执行失败", exception).replenish(instance));
+                send(Constant.DISPATCH_REPORT, JobReport.fail("执行失败", exception).replenish(instance));
             }
             taskThreadManager.stopJob(instance, false);
         });
-        log.info("RunJobVerticle processed jobName = {}", instance.getJobName());
+        log.info("RunJobVerticle dispatched {} jobName = {}", instance.getProcessorInfo(), instance.getJobName());
     }
 
 

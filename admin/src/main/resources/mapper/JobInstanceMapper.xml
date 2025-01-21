@@ -187,7 +187,7 @@
             result = #{result,jdbcType=VARCHAR},
             updated_date = now()
             <if test="status > 2">
-                end_time = #{timestamp,jdbcType=TIMESTAMP}
+                , end_time = #{timestamp,jdbcType=TIMESTAMP}
             </if>
         </set>
         where id = #{instance.id,jdbcType=BIGINT}

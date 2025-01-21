@@ -18,6 +18,10 @@ public class VertxConfiguration {
 
     private String tag = "default";
 
+    private long heartbeatInterval = 30;
+
+    private long timeout = 60;
+
     private String serviceName;
 
     private Integer port;

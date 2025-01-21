@@ -1,11 +1,9 @@
-package com.worker.config;
+package com.admin.config;
 
 import com.common.config.VertxConfiguration;
 import com.common.constant.Constant;
-import com.common.entity.JobHandler;
 import com.common.entity.MappingInfo;
 import com.common.entity.NodeInfo;
-import com.common.util.PathUtil;
 import com.common.vertx.AbstractEventVerticle;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -25,13 +23,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class WorkerMappingManager {
-
-    private final VertxConfiguration vertxConfiguration;
+public class AdminMappingManager {
 
     private final HazelcastInstance hazelcast;
 
-    private final List<JobHandler> jobHandlers;
+    private final VertxConfiguration vertxConfiguration;
 
     private final List<AbstractEventVerticle<?>> verticles;
 
@@ -47,13 +43,13 @@ public class WorkerMappingManager {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         long initialDelay = 3L;
         long interval = vertxConfiguration.getHeartbeatInterval();
-        scheduler.scheduleWithFixedDelay(this::registerWorker, initialDelay, interval, TimeUnit.SECONDS);
+        scheduler.scheduleWithFixedDelay(this::registerAdmin, initialDelay, interval, TimeUnit.SECONDS);
     }
 
     /**
-     * Register the job binding to the hazelcast. | 注册任务绑定到 hazelcast 实例 (移除交由 @see com.common.listener.NodeMembershipListener)
+     * Register the verticle binding to the hazelcast.
      */
-    private void registerWorker() {
+    public void registerAdmin() {
         IMap<String, NodeInfo> nodeMap = getNodeMap();
         NodeInfo nodeInfo = nodeMap.get(NodeInfo.getServerAddress());
         if (isNodeNotChanged(nodeInfo) && isNodeAlive(nodeInfo)) {
@@ -61,13 +57,19 @@ public class WorkerMappingManager {
             nodeMap.put(NodeInfo.getServerAddress(), NodeInfo.getNowTimeStamp());
             return;
         }
-        List<String> addressList = verticles.stream().map(AbstractEventVerticle::fullAddress).toList();
-        registerVerticles(addressList);
-
-        List<String> handlers = jobHandlers.stream().map(JobHandler::getClass).map(Class::getName).toList();
-        registerHandle(handlers);
+        List<String> list = verticles.stream().map(AbstractEventVerticle::fullAddress).toList();
+        register(list);
         nodeMap.put(NodeInfo.getServerAddress(), NodeInfo.getNowTimeStamp());
     }
+
+    public void register(List<String> addresslist) {
+        for (String address : addresslist) {
+            getFeatureHolderMap().put(address, MappingInfo.of(NodeInfo.getServerAddress(), vertxConfiguration.getTag()));
+        }
+        log.info("Registered {} verticles for node {}", verticles.size(), NodeInfo.getServerAddress());
+        getNodeHolderMap().putAllAsync(NodeInfo.getServerAddress(), addresslist);
+    }
+
 
     private boolean isNodeNotChanged(NodeInfo nodeInfo) {
         return nodeInfo != null && nodeInfo.getId().equals(NodeInfo.getInfo().getId());
@@ -77,25 +79,6 @@ public class WorkerMappingManager {
     private boolean isNodeAlive(NodeInfo nodeInfo) {
         return Duration.between(nodeInfo.getTimestamp(), LocalDateTime.now()).getSeconds() <= vertxConfiguration.getTimeout();
     }
-
-    private void registerHandle(List<String> processorInfos) {
-        for (String processorInfo : processorInfos) {
-            MappingInfo mappingInfo = MappingInfo.of(PathUtil.getGlobalPath(Constant.DISPATCH), vertxConfiguration.getTag());
-            getFeatureHolderMap().put(processorInfo, mappingInfo);
-        }
-        log.info("Registered {} jop handle for node {}", verticles.size(), NodeInfo.getServerAddress());
-        getNodeHolderMap().putAllAsync(NodeInfo.getServerAddress(), processorInfos);
-    }
-
-
-    private void registerVerticles(List<String> addressList) {
-        for (String address : addressList) {
-            getFeatureHolderMap().put(address, MappingInfo.of(NodeInfo.getServerAddress(), vertxConfiguration.getTag()));
-        }
-        log.info("Registered {} verticles for node {}", verticles.size(), NodeInfo.getServerAddress());
-        getNodeHolderMap().putAllAsync(NodeInfo.getServerAddress(), addressList);
-    }
-
 
     private IMap<String, NodeInfo> getNodeMap() {
         if (nodeMap == null) {
