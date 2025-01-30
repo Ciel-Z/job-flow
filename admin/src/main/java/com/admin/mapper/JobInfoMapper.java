@@ -3,6 +3,10 @@ package com.admin.mapper;
 import com.admin.vo.JobRequestVO;
 import com.common.entity.JobInfo;
 import com.github.pagehelper.Page;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 /**
  * @author zuobin
@@ -25,4 +29,13 @@ public interface JobInfoMapper {
     int updateByPrimaryKey(JobInfo record);
 
     Page<JobInfo> selectPage(JobRequestVO requestVO);
+
+    List<Long> selectOverdueJob(@Param("timestamp") Long timestamp);
+
+    void updateJobServerIp(@Param("jobIds") List<Long> jobIds, @Param("serverIp") String serverIp);
+
+    List<JobInfo> selectByServerIpAndLessTimestamp(@Param("serverAddress") String serverAddress, @Param("timestamp") Long timestamp);
+
+    @Update("update t_job_info set next_trigger_time = #{nextTriggerTime} where job_id = #{jobId}")
+    void updateJobNextTriggerTime(@Param("jobId") Long jobId, @Param("nextTriggerTime") Long nextTriggerTime);
 }

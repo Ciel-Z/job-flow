@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 @Data
 public class JobReport implements Serializable {
 
-    private JobInstance instance;
-
     /**
      * 执行返回消息
      */
@@ -30,46 +28,55 @@ public class JobReport implements Serializable {
     /**
      * 处理节点地址
      */
-    private String workerAddress = NodeInfo.getServerAddress();
+    private String workerAddress;
+
+    /**
+     * 任务实例
+     */
+    private JobInstance instance;
 
     /**
      * 时间戳
      */
     private LocalDateTime timestamp = LocalDateTime.now();
 
-
-    private JobReport(String result, Integer status) {
+    private JobReport(Integer status, String result) {
         this.result = result;
         this.status = status;
     }
 
-    private JobReport(String result, Integer status, Throwable throwable) {
-        this(result, status);
+    private JobReport(Integer status, String result, Throwable throwable) {
+        this(status, result);
         this.throwable = throwable;
     }
 
+    public JobReport workerAddress(String workerAddress) {
+        this.workerAddress = workerAddress;
+        return this;
+    }
+
+    public JobReport jobInstance(JobInstance instance) {
+        this.instance = instance;
+        return this;
+    }
+
     public static JobReport success(String massage) {
-        return new JobReport(massage, JobStatusEnum.SUCCESS.getCode());
+        return new JobReport(JobStatusEnum.SUCCESS.getCode(), massage);
     }
 
     public static JobReport fail(String massage) {
-        return new JobReport(massage, JobStatusEnum.FAIL.getCode());
+        return new JobReport(JobStatusEnum.FAIL.getCode(), massage);
     }
 
     public static JobReport fail(String massage, Throwable throwable) {
-        return new JobReport(massage, JobStatusEnum.FAIL.getCode(), throwable);
+        return new JobReport(JobStatusEnum.FAIL.getCode(), massage, throwable);
     }
 
     public static JobReport pause(String massage) {
-        return new JobReport(massage, JobStatusEnum.PAUSE.getCode());
+        return new JobReport(JobStatusEnum.PAUSE.getCode(), massage);
     }
 
     public static JobReport running(String massage) {
-        return new JobReport(massage, JobStatusEnum.RUNNING.getCode());
-    }
-
-    public JobReport replenish(JobInstance instance) {
-        this.instance = instance;
-        return this;
+        return new JobReport(JobStatusEnum.RUNNING.getCode(), massage);
     }
 }

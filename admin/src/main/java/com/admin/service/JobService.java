@@ -15,4 +15,5 @@ public interface JobService {
 
     JobInfo detail(Long jobId);
 
+    void toggle(Long jobId);
 }

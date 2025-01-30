@@ -9,36 +9,6 @@ public class AssertUtils {
 
 
     /**
-     * 断言对象不为空
-     *
-     * @param obj     断言的对象
-     * @param message 异常信息
-     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
-     */
-    public static void notNull(Object obj, String message) throws ServiceException {
-        if (obj == null) {
-            throw new ServiceException(message);
-        }
-    }
-
-
-    /**
-     * 断言字符串不为空
-     *
-     * @param str       断言的字符串
-     * @param message   异常信息，可包含占位符{}
-     * @param arguments 用于填充占位符的可变参数列表
-     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
-     */
-    public static void notEmpty(String str, String message, Object... arguments) throws ServiceException {
-        notNull(str, message);
-        if (str.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
-        }
-    }
-
-
-    /**
      * 断言对象为空
      *
      * @param obj     断言的对象
@@ -65,6 +35,36 @@ public class AssertUtils {
             throw new ServiceException(formatStringWithPlaceholders(message, arguments));
         }
     }
+
+
+    /**
+     * 断言对象不为空
+     *
+     * @param obj     断言的对象
+     * @param message 异常信息
+     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
+     */
+    public static void isNotNull(Object obj, String message) throws ServiceException {
+        if (obj == null) {
+            throw new ServiceException(message);
+        }
+    }
+
+
+    /**
+     * 断言对象不为空
+     *
+     * @param obj       断言的对象
+     * @param message   异常信息，可包含占位符{}
+     * @param arguments 用于填充占位符的可变参数列表
+     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
+     */
+    public static void isNotNull(Object obj, String message, Object... arguments) throws ServiceException {
+        if (obj == null) {
+            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+        }
+    }
+
 
     /**
      * 断言条件为真
@@ -119,6 +119,66 @@ public class AssertUtils {
      */
     public static void isFalse(boolean condition, String message, Object... arguments) throws ServiceException {
         if (condition) {
+            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+        }
+    }
+
+
+    /**
+     * 断言字符串为空
+     *
+     * @param str     断言的字符串
+     * @param message 异常信息，可包含占位符{}
+     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
+     */
+    public static void empty(String str, String message) throws ServiceException {
+        if (str != null && !str.isEmpty()) {
+            throw new ServiceException(message);
+        }
+    }
+
+
+    /**
+     * 断言字符串为空
+     *
+     * @param str       断言的字符串
+     * @param message   异常信息，可包含占位符{}
+     * @param arguments 用于填充占位符的可变参数列表
+     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
+     */
+    public static void empty(String str, String message, Object... arguments) throws ServiceException {
+        if (str != null && !str.isEmpty()) {
+            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+        }
+    }
+
+
+    /**
+     * 断言字符串不为空
+     *
+     * @param str     断言的字符串
+     * @param message 异常信息，可包含占位符{}
+     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
+     */
+    public static void notEmpty(String str, String message) throws ServiceException {
+        isNotNull(str, message);
+        if (str.isEmpty()) {
+            throw new ServiceException(message);
+        }
+    }
+
+
+    /**
+     * 断言字符串不为空
+     *
+     * @param str       断言的字符串
+     * @param message   异常信息，可包含占位符{}
+     * @param arguments 用于填充占位符的可变参数列表
+     * @throws ServiceException 当断言失败时抛出 ServiceException 异常
+     */
+    public static void notEmpty(String str, String message, Object... arguments) throws ServiceException {
+        isNotNull(str, message);
+        if (str.isEmpty()) {
             throw new ServiceException(formatStringWithPlaceholders(message, arguments));
         }
     }

@@ -5,24 +5,24 @@
 <mapper namespace="com.admin.mapper.JobInstanceMapper">
 
     <resultMap id="BaseResultMap" type="com.common.entity.JobInstance">
-        <id property="id" column="id" />
-        <result property="jobId" column="job_id" />
-        <result property="jobName" column="job_name" />
-        <result property="instanceId" column="instance_id" />
-        <result property="flowInstanceId" column="flow_instance_id" />
-        <result property="dispatchStrategy" column="dispatch_strategy" />
-        <result property="extra" column="extra" />
-        <result property="tag" column="tag" />
-        <result property="processorInfo" column="processor_info" />
-        <result property="params" column="params" />
-        <result property="workerAddress" column="worker_address" />
-        <result property="triggerTime" column="trigger_time" />
-        <result property="replyTime" column="reply_time" />
-        <result property="endTime" column="end_time" />
-        <result property="result" column="result" />
-        <result property="status" column="status" />
-        <result property="createdDate" column="created_date" />
-        <result property="updatedDate" column="updated_date" />
+            <id property="id" column="id" />
+            <result property="jobId" column="job_id" />
+            <result property="jobName" column="job_name" />
+            <result property="instanceId" column="instance_id" />
+            <result property="flowInstanceId" column="flow_instance_id" />
+            <result property="dispatchStrategy" column="dispatch_strategy" />
+            <result property="extra" column="extra" />
+            <result property="tag" column="tag" />
+            <result property="processorInfo" column="processor_info" />
+            <result property="params" column="params" />
+            <result property="workerAddress" column="worker_address" />
+            <result property="triggerTime" column="trigger_time" />
+            <result property="replyTime" column="reply_time" />
+            <result property="endTime" column="end_time" />
+            <result property="result" column="result" />
+            <result property="status" column="status" />
+            <result property="createdDate" column="created_date" />
+            <result property="updatedDate" column="updated_date" />
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -36,128 +36,127 @@
         select
         <include refid="Base_Column_List" />
         from t_job_instance
-        where  id = #{id,jdbcType=BIGINT}
+        where  id = #{id} 
     </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from t_job_instance
-        where  id = #{id,jdbcType=BIGINT}
+        where  id = #{id} 
     </delete>
-
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobInstance" useGeneratedKeys="true">
         insert into t_job_instance
         ( id,job_id,job_name,instance_id,flow_instance_id,dispatch_strategy,
-          extra,tag,processor_info,params,worker_address,
-          trigger_time,reply_time,end_time,result,status
-        )
+        extra,tag,processor_info,params,worker_address,
+        trigger_time,reply_time,end_time,result,status,
+        created_date,updated_date)
         values (#{id},#{jobId},#{jobName},#{instanceId},#{flowInstanceId},#{dispatchStrategy},
-                #{extra},#{tag},#{processorInfo},#{params},#{workerAddress},
-                #{triggerTime},#{replyTime},#{endTime},#{result},#{status}
-        )
+        #{extra},#{tag},#{processorInfo},#{params},#{workerAddress},
+        #{triggerTime},#{replyTime},#{endTime},#{result},#{status},
+        #{createdDate},#{updatedDate})
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobInstance" useGeneratedKeys="true">
         insert into t_job_instance
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="id != null">id,</if>
-            <if test="jobId != null">job_id,</if>
-            <if test="jobName != null">job_name,</if>
-            <if test="instanceId != null">instance_id,</if>
-            <if test="flowInstanceId != null">flow_instance_id,</if>
-            <if test="dispatchStrategy != null">dispatch_strategy,</if>
-            <if test="extra != null">extra,</if>
-            <if test="tag != null">tag,</if>
-            <if test="processorInfo != null">processor_info,</if>
-            <if test="params != null">params,</if>
-            <if test="workerAddress != null">worker_address,</if>
-            <if test="triggerTime != null">trigger_time,</if>
-            <if test="replyTime != null">reply_time,</if>
-            <if test="endTime != null">end_time,</if>
-            <if test="result != null">result,</if>
-            <if test="status != null">status,</if>
-            <if test="createdDate != null">created_date,</if>
-            <if test="updatedDate != null">updated_date,</if>
+                <if test="id != null">id,</if>
+                <if test="jobId != null">job_id,</if>
+                <if test="jobName != null">job_name,</if>
+                <if test="instanceId != null">instance_id,</if>
+                <if test="flowInstanceId != null">flow_instance_id,</if>
+                <if test="dispatchStrategy != null">dispatch_strategy,</if>
+                <if test="extra != null">extra,</if>
+                <if test="tag != null">tag,</if>
+                <if test="processorInfo != null">processor_info,</if>
+                <if test="params != null">params,</if>
+                <if test="workerAddress != null">worker_address,</if>
+                <if test="triggerTime != null">trigger_time,</if>
+                <if test="replyTime != null">reply_time,</if>
+                <if test="endTime != null">end_time,</if>
+                <if test="result != null">result,</if>
+                <if test="status != null">status,</if>
+                <if test="createdDate != null">created_date,</if>
+                <if test="updatedDate != null">updated_date,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="id != null">#{id},</if>
-            <if test="jobId != null">#{jobId},</if>
-            <if test="jobName != null">#{jobName},</if>
-            <if test="instanceId != null">#{instanceId},</if>
-            <if test="flowInstanceId != null">#{flowInstanceId},</if>
-            <if test="dispatchStrategy != null">#{dispatchStrategy},</if>
-            <if test="extra != null">#{extra},</if>
-            <if test="tag != null">#{tag},</if>
-            <if test="processorInfo != null">#{processorInfo},</if>
-            <if test="params != null">#{params},</if>
-            <if test="workerAddress != null">#{workerAddress},</if>
-            <if test="triggerTime != null">#{triggerTime},</if>
-            <if test="replyTime != null">#{replyTime},</if>
-            <if test="endTime != null">#{endTime},</if>
-            <if test="result != null">#{result},</if>
-            <if test="status != null">#{status},</if>
-            <if test="createdDate != null">#{createdDate},</if>
-            <if test="updatedDate != null">#{updatedDate},</if>
+                <if test="id != null">#{id},</if>
+                <if test="jobId != null">#{jobId},</if>
+                <if test="jobName != null">#{jobName},</if>
+                <if test="instanceId != null">#{instanceId},</if>
+                <if test="flowInstanceId != null">#{flowInstanceId},</if>
+                <if test="dispatchStrategy != null">#{dispatchStrategy},</if>
+                <if test="extra != null">#{extra},</if>
+                <if test="tag != null">#{tag},</if>
+                <if test="processorInfo != null">#{processorInfo},</if>
+                <if test="params != null">#{params},</if>
+                <if test="workerAddress != null">#{workerAddress},</if>
+                <if test="triggerTime != null">#{triggerTime},</if>
+                <if test="replyTime != null">#{replyTime},</if>
+                <if test="endTime != null">#{endTime},</if>
+                <if test="result != null">#{result},</if>
+                <if test="status != null">#{status},</if>
+                <if test="createdDate != null">#{createdDate},</if>
+                <if test="updatedDate != null">#{updatedDate},</if>
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="com.common.entity.JobInstance">
         update t_job_instance
         <set>
-            <if test="jobId != null">
-                job_id = #{jobId},
-            </if>
-            <if test="jobName != null">
-                job_name = #{jobName},
-            </if>
-            <if test="instanceId != null">
-                instance_id = #{instanceId},
-            </if>
-            <if test="flowInstanceId != null">
-                flow_instance_id = #{flowInstanceId},
-            </if>
-            <if test="dispatchStrategy != null">
-                dispatch_strategy = #{dispatchStrategy},
-            </if>
-            <if test="extra != null">
-                extra = #{extra},
-            </if>
-            <if test="tag != null">
-                tag = #{tag},
-            </if>
-            <if test="processorInfo != null">
-                processor_info = #{processorInfo},
-            </if>
-            <if test="params != null">
-                params = #{params},
-            </if>
-            <if test="workerAddress != null">
-                worker_address = #{workerAddress},
-            </if>
-            <if test="triggerTime != null">
-                trigger_time = #{triggerTime},
-            </if>
-            <if test="replyTime != null">
-                reply_time = #{replyTime},
-            </if>
-            <if test="endTime != null">
-                end_time = #{endTime},
-            </if>
-            <if test="result != null">
-                result = #{result},
-            </if>
-            <if test="status != null">
-                status = #{status},
-            </if>
-            <if test="createdDate != null">
-                created_date = #{createdDate},
-            </if>
-            <if test="updatedDate != null">
-                updated_date = #{updatedDate},
-            </if>
+                <if test="jobId != null">
+                    job_id = #{jobId},
+                </if>
+                <if test="jobName != null">
+                    job_name = #{jobName},
+                </if>
+                <if test="instanceId != null">
+                    instance_id = #{instanceId},
+                </if>
+                <if test="flowInstanceId != null">
+                    flow_instance_id = #{flowInstanceId},
+                </if>
+                <if test="dispatchStrategy != null">
+                    dispatch_strategy = #{dispatchStrategy},
+                </if>
+                <if test="extra != null">
+                    extra = #{extra},
+                </if>
+                <if test="tag != null">
+                    tag = #{tag},
+                </if>
+                <if test="processorInfo != null">
+                    processor_info = #{processorInfo},
+                </if>
+                <if test="params != null">
+                    params = #{params},
+                </if>
+                <if test="workerAddress != null">
+                    worker_address = #{workerAddress},
+                </if>
+                <if test="triggerTime != null">
+                    trigger_time = #{triggerTime},
+                </if>
+                <if test="replyTime != null">
+                    reply_time = #{replyTime},
+                </if>
+                <if test="endTime != null">
+                    end_time = #{endTime},
+                </if>
+                <if test="result != null">
+                    result = #{result},
+                </if>
+                <if test="status != null">
+                    status = #{status},
+                </if>
+                <if test="createdDate != null">
+                    created_date = #{createdDate},
+                </if>
+                <if test="updatedDate != null">
+                    updated_date = #{updatedDate},
+                </if>
         </set>
-        where   id = #{id}
+        where   id = #{id} 
     </update>
     <update id="updateByPrimaryKey" parameterType="com.common.entity.JobInstance">
         update t_job_instance
-        set
+        set 
             job_id =  #{jobId},
             job_name =  #{jobName},
             instance_id =  #{instanceId},
@@ -175,7 +174,7 @@
             status =  #{status},
             created_date =  #{createdDate},
             updated_date =  #{updatedDate}
-        where   id = #{id}
+        where   id = #{id} 
     </update>
 
     <update id="updateByEvent">
@@ -184,7 +183,7 @@
             worker_address = #{workerAddress,jdbcType=VARCHAR},
             status = #{status,jdbcType=INTEGER},
             reply_time = #{timestamp,jdbcType=TIMESTAMP},
-            result = #{result,jdbcType=VARCHAR},
+            `result` = #{result,jdbcType=VARCHAR},
             updated_date = now()
             <if test="status > 2">
                 , end_time = #{timestamp,jdbcType=TIMESTAMP}

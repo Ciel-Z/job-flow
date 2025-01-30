@@ -1,4 +1,4 @@
-package com.admin.assign;
+package com.admin.selector;
 
 import com.common.entity.JobInstance;
 import com.common.util.AssertUtils;
@@ -13,7 +13,7 @@ import java.util.Random;
 @Getter
 @Component
 @RequiredArgsConstructor
-public class RandomDispatch implements Dispatch {
+public class RandomSelector implements Selector {
 
     private final HazelcastInstance hazelcast;
 
@@ -24,7 +24,8 @@ public class RandomDispatch implements Dispatch {
     }
 
     @Override
-    public String dispatch(String address, JobInstance instance) {
+    public String select(String address, JobInstance instance) {
+        hazelcast.getCPSubsystem().getAtomicReference("test").set("test");
         List<String> nodes = getAvailable(address, instance.getTag());
         AssertUtils.notEmpty(nodes, "No available nodes for signature: " + address);
         String host = nodes.get(new Random().nextInt(nodes.size()));

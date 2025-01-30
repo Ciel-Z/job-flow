@@ -1,6 +1,6 @@
 package com.admin.verticle;
 
-import com.admin.assign.Dispatch;
+import com.admin.selector.Selector;
 import com.alibaba.fastjson2.JSON;
 import com.common.entity.JobInstance;
 import com.common.util.AssertUtils;
@@ -27,20 +27,20 @@ public class MessageDispatcher {
 
     private final Vertx vertx;
 
-    private final List<Dispatch> dispatchList;
+    private final List<Selector> selectorList;
 
-    private final Map<Integer, Dispatch> dispatchMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Selector> dispatchMap = new ConcurrentHashMap<>();
 
 
     @PostConstruct
-    public void initDispatchMap() {
+    public void initSelectorMap() {
         // 根据 Dispatch 的 getStrategyId 方法注册到 Map 中
-        for (Dispatch dispatch : dispatchList) {
-            Integer strategyId = dispatch.getStrategyId();
+        for (Selector selector : selectorList) {
+            Integer strategyId = selector.getStrategyId();
             if (dispatchMap.containsKey(strategyId)) {
                 throw new IllegalStateException("Duplicate dispatch strategy ID: " + strategyId);
             }
-            dispatchMap.put(strategyId, dispatch);
+            dispatchMap.put(strategyId, selector);
         }
     }
 
@@ -70,7 +70,7 @@ public class MessageDispatcher {
         }
 
         public Dispatcher doDispatch(JobInstance instance) {
-            this.currentAddress = getDispatch(instance.getDispatchStrategy()).dispatch(instance.getProcessorInfo(), instance);
+            this.currentAddress = getDispatch(instance.getDispatchStrategy()).select(instance.getProcessorInfo(), instance);
             return this;
         }
 
@@ -120,8 +120,8 @@ public class MessageDispatcher {
         }
 
 
-        private Dispatch getDispatch(Integer dispatchStrategy) {
-            AssertUtils.notEmpty(dispatchList, "No available dispatch strategy");
+        private Selector getDispatch(Integer dispatchStrategy) {
+            AssertUtils.notEmpty(selectorList, "No available dispatch strategy");
             return dispatchMap.get(Optional.ofNullable(dispatchStrategy).orElse(1));
         }
 

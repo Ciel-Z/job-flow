@@ -13,9 +13,14 @@ public class Constant {
     public static final String NODE_HOLDER = "nodeHolder";
 
     /**
-     * 节点列表
+     * Server 节点列表
      */
-    public static final String NODE_LIST = "NodeList";
+    public static final String SERVER_LIST = "serverList";
+
+    /**
+     * Worker 节点列表
+     */
+    public static final String WORKER_LIST = "workerList";
 
     /**
      * 任务调度 path

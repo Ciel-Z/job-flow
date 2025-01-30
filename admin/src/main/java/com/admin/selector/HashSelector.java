@@ -1,4 +1,4 @@
-package com.admin.assign;
+package com.admin.selector;
 
 import com.common.entity.JobInstance;
 import com.common.util.AssertUtils;
@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Configuration
 @RequiredArgsConstructor
-public class HashDispatch implements Dispatch {
+public class HashSelector implements Selector {
 
     private final HazelcastInstance hazelcast;
 
@@ -23,7 +23,7 @@ public class HashDispatch implements Dispatch {
     }
 
     @Override
-    public String dispatch(String address, JobInstance instance) {
+    public String select(String address, JobInstance instance) {
         List<String> available = getAvailable(address, instance.getTag());
         AssertUtils.notEmpty(available, "No available nodes for signature: " + address);
         return available.get(HashUtil.hashCode(instance.getJobId()) & (available.size() - 1));

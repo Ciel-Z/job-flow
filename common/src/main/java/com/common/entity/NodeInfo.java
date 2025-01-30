@@ -15,27 +15,21 @@ public class NodeInfo {
     private NodeInfo() {
     }
 
-    private static final NodeInfo INFO = new NodeInfo();
-
-    public static void of(String id, String ip, Integer port) {
-        INFO.id = id;
-        INFO.ip = ip;
-        INFO.port = port;
+    public static NodeInfo of(String id, String ip, Integer port) {
+        NodeInfo nodeInfo = new NodeInfo();
+        nodeInfo.id = id;
+        nodeInfo.ip = ip;
+        nodeInfo.port = port;
+        return nodeInfo;
     }
 
-    public static NodeInfo getNowTimeStamp() {
-        INFO.timestamp = LocalDateTime.now();
-        return INFO;
+    public NodeInfo updateTimeStamp() {
+        this.timestamp = LocalDateTime.now();
+        return this;
     }
 
-
-    public static NodeInfo getInfo() {
-        return INFO;
-    }
-
-
-    public static String getServerAddress() {
-        return String.format("%s:%s", INFO.ip, INFO.port);
+    public  String getServerAddress() {
+        return String.format("%s:%s", ip, port);
     }
 
 }

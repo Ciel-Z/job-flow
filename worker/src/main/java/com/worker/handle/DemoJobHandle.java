@@ -11,7 +11,7 @@ public class DemoJobHandle implements JobHandler {
     @Override
     public JobReport handle(JobContext context) throws InterruptedException {
         // 模拟任务执行
-        Thread.sleep(2000);
+        Thread.sleep(200000);
         return JobReport.success("任务执行成功");
     }
 

@@ -16,7 +16,7 @@ public class JobDispatchController extends BaseController{
 
 
     @GetMapping("/start/{jobId}")
-    public Mono<Result<String>> start(@PathVariable("jobId") Long jobId, @RequestParam(value = "instanceParams", required = false, defaultValue = "#{null}") String instanceParams
+    public Mono<Result<String>> start(@PathVariable("jobId") Long jobId, @RequestParam(value = "instanceParams", required = false) String instanceParams
             , @RequestParam(value = "delayMS", required = false, defaultValue = "0") Long delayMS) {
         jobDispatchService.start(jobId, instanceParams, delayMS);
         return Mono.just(Result.success("Published job"));

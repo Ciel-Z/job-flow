@@ -7,13 +7,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 任务流实例表
+ * 任务实例表
  *
  * @TableName t_job_instance
  */
 @Data
 public class JobInstance implements Serializable, Cloneable {
-
     /**
      * ID
      */
@@ -104,7 +103,6 @@ public class JobInstance implements Serializable, Cloneable {
      */
     private LocalDateTime updatedDate;
 
-
     //>>>> 以下为非数据库字段
 
     /**
@@ -118,9 +116,9 @@ public class JobInstance implements Serializable, Cloneable {
     private Long currentRetryTimes;
 
     @Override
-    public JobInstance clone() {
+    public com.common.entity.JobInstance clone() {
         try {
-            JobInstance clone = (JobInstance) super.clone();
+            com.common.entity.JobInstance clone = (com.common.entity.JobInstance) super.clone();
             clone.setId(null);
             clone.setEndTime(null);
             clone.setResult(null);

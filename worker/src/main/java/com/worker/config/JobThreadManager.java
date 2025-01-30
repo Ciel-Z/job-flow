@@ -1,16 +1,15 @@
-package com.worker.verticle;
+package com.worker.config;
 
 import com.common.constant.Constant;
 import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.worker.config.WorkerConfigure;
 import io.vertx.core.Vertx;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
@@ -22,7 +21,7 @@ import java.util.function.Supplier;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class JobThreadManager {
+public class JobThreadManager implements InitializingBean {
 
     private final Vertx vertx;
 
@@ -34,8 +33,8 @@ public class JobThreadManager {
 
     private Map<Long, JobThreadHolder<?>> jobMap;
 
-    @PostConstruct
-    private void init() {
+    @Override
+    public void afterPropertiesSet() throws Exception {
         // 任务线程池
         WorkerConfigure.JobThreadConfigure jobThreadPool = configure.getJobThreadPool();
         ThreadFactory jobFactory = new ThreadFactoryBuilder().setNameFormat(jobThreadPool.getThreadNameFormat()).build();
@@ -93,8 +92,9 @@ public class JobThreadManager {
         } else { // job done
             return;
         }
-        vertx.eventBus().send(Constant.DISPATCH_REPORT, report.replenish(instance));
+        vertx.eventBus().send(Constant.DISPATCH_REPORT, report.jobInstance(instance));
     }
+
 
 
     @Data

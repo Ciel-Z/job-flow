@@ -1,4 +1,4 @@
-package com.admin.assign;
+package com.admin.selector;
 
 import com.common.entity.JobInstance;
 import com.hazelcast.core.HazelcastInstance;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Getter
 @Component
 @RequiredArgsConstructor
-public class PollIngDispatch implements Dispatch {
+public class PollIngSelector implements Selector {
 
     private final HazelcastInstance hazelcast;
 
@@ -26,14 +26,13 @@ public class PollIngDispatch implements Dispatch {
     }
 
     @Override
-    public String dispatch(String address, JobInstance instance) {
+    public String select(String address, JobInstance instance) {
         List<String> nodes = getAvailable(address, instance.getTag());
         if (nodes.isEmpty()) {
-            log.warn("No available worker nodes for processorInfo: {}", instance.getTag());
+            log.warn("No available worker nodes for processorInfo: {}", address);
             return address;
         }
         long offset = counter.getAndAdd(1);
-        String workerAddress = nodes.get((int) (offset % nodes.size()));
-        return workerAddress;
+        return nodes.get((int) (offset % nodes.size()));
     }
 }

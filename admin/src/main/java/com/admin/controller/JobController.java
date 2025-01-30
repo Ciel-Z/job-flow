@@ -29,6 +29,12 @@ public class JobController extends BaseController{
         return Mono.just(Result.success("added"));
     }
 
+    @GetMapping("/toggle/{jobId}")
+    public Mono<Result<String>> toggle(@PathVariable("jobId") Long jobId) {
+        jobService.toggle(jobId);
+        return Mono.just(Result.success("toggled"));
+    }
+
     @GetMapping("/delete?/{jobId}")
     public Mono<Result<String>> delete(@PathVariable Long jobId) {
         jobService.delete(jobId);

@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -41,10 +40,11 @@ public class JobDispatchServiceImpl implements JobDispatchService {
     @Override
     public void start(Long jobId, String instanceParams, long delayMS) {
         JobInfo jobInfo = jobMapper.selectByPrimaryKey(jobId);
-        AssertUtils.notNull(jobInfo, "Job not found");
+        AssertUtils.isNotNull(jobInfo, "Job not found");
         AssertUtils.notEmpty(jobInfo.getProcessorInfo(), "ProcessorInfo is empty");
 
         JobInstance instance = instance(jobInfo, instanceParams);
+        // 符合启动条件, 异步启动任务
         vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
             log.info("start job jobId: {}, instanceId: {}", instance.getJobId(), instance.getInstanceId());
             doStart(instance);
@@ -62,25 +62,24 @@ public class JobDispatchServiceImpl implements JobDispatchService {
             if (e != null) {
                 instance.setEndTime(LocalDateTime.now());
                 instance.setResult(e.getMessage());
-//                if (instance.getCurrentRetryTimes() < jobInfo.getMaxRetryTimes()) {
-//                    // retry
-//                    vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
-//                        JobInstance nextInstance = instance.clone();
-//                        nextInstance.setCurrentRetryTimes(instance.getCurrentRetryTimes() + 1);
-//                        doStart(nextInstance);
-//                    });
-//                }
+                if (instance.getCurrentRetryTimes() < jobInfo.getMaxRetryTimes()) {
+                    // retry
+                    vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
+                        JobInstance nextInstance = instance.clone();
+                        nextInstance.setCurrentRetryTimes(instance.getCurrentRetryTimes() + 1);
+                        doStart(nextInstance);
+                    });
+                }
             }
             jobInstanceMapper.updateByPrimaryKey(instance);
         });
     }
 
 
-
     @Override
     public void stop(JobInstanceVO jobInstanceVO) {
         JobInstance jobInstance = jobInstanceMapper.selectByPrimaryKey(jobInstanceVO.getId());
-        AssertUtils.notNull(jobInstance, "Instance not found");
+        AssertUtils.isNotNull(jobInstance, "Instance not found");
         AssertUtils.isTrue(jobInstance.getStatus() == 1, "The current state does not allow stopping");
         jobInstance.setStatus(JobStatusEnum.FAIL.getCode());
         jobInstance.setEndTime(LocalDateTime.now());
@@ -90,14 +89,8 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         // 修改任务实例全局状态 | 任务监控线程上报状态前会检查此状态, 非运行状态时会停止任务线程
         hazelcast.getMap(Constant.STATE_MACHINE).put(jobInstance.getId(), JobStatusEnum.FAIL.getCode());
 
-        // 实时通知
-        if (StringUtils.hasText(jobInstance.getWorkerAddress())) {
-            // 发送停止任务消息, 通知执行器停止任务
-            messageDispatcher.dispatcher(PathUtil.getGlobalPath(jobInstance.getWorkerAddress(), Constant.STOP_JOB)).send(jobInstance);
-        } else {
-            // 未获取 worker 信息, 发布停止任务消息, 通知执行器停止任务
-            messageDispatcher.dispatcher(Constant.STOP_JOB).publish(jobInstance);
-        }
+        // 发送停止任务消息, 通知执行器停止任务
+        messageDispatcher.dispatcher(PathUtil.getGlobalPath(jobInstance.getWorkerAddress(), Constant.STOP_JOB)).send(jobInstance);
     }
 
 

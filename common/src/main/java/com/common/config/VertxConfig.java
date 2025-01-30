@@ -67,15 +67,6 @@ public class VertxConfig {
         Vertx.builder().withClusterManager(clusterManager).buildClustered(res -> {
             if (res.succeeded()) {
                 future.complete(res.result());
-
-                // 获取当前 Hazelcast 实例信息
-                HazelcastInstance hazelcast = clusterManager.getHazelcastInstance();
-                Member localMember = hazelcast.getCluster().getLocalMember();
-                String nodeId = localMember.getUuid().toString();
-                String host = localMember.getAddress().getHost();
-                int port = localMember.getAddress().getPort();
-                NodeInfo.of(nodeId, host, port);
-                log.info("Vertx instance deployed successfully local IP: {}:{}", host, port);
             }
         });
         return future.get();
@@ -86,6 +77,19 @@ public class VertxConfig {
     @DependsOn("vertx")
     public HazelcastInstance hazelcast(HazelcastClusterManager clusterManager) {
         return clusterManager.getHazelcastInstance();
+    }
+
+
+    @Bean
+    @DependsOn("hazelcast")
+    public NodeInfo localNode(HazelcastInstance hazelcast) {
+        Member localMember = hazelcast.getCluster().getLocalMember();
+        String nodeId = localMember.getUuid().toString();
+        String host = localMember.getAddress().getHost();
+        int port = localMember.getAddress().getPort();
+        NodeInfo nodeInfo = NodeInfo.of(nodeId, host, port);
+        log.info("Vertx instance deployed successfully local IP: {}:{}", host, port);
+        return nodeInfo;
     }
 
 

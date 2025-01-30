@@ -3,7 +3,7 @@ package com.common.vertx;
 import com.alibaba.fastjson2.JSON;
 import com.common.annotation.VerticlePath;
 import com.common.entity.JobEvent;
-import com.common.entity.JobReport;
+import com.common.entity.NodeInfo;
 import com.common.util.AssertUtils;
 import com.common.util.PathUtil;
 import io.vertx.core.AbstractVerticle;
@@ -11,6 +11,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -18,7 +19,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
+public abstract class AbstractEventVerticle<T> extends AbstractVerticle{
+
+    @Autowired
+    private NodeInfo localNode;
 
     private final List<MessageConsumer<String>> consumers = new ArrayList<>();
 
@@ -51,10 +55,6 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
     }
 
 
-    protected void send(String address, JobReport jobReport) {
-        vertx.eventBus().send(address, JSON.toJSONString(jobReport));
-    }
-
     public String address() {
         VerticlePath verticlePath = getClass().getAnnotation(VerticlePath.class);
         String address = Optional.ofNullable(verticlePath).map(VerticlePath::value).orElse("");
@@ -63,7 +63,7 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle {
     }
 
     public String fullAddress() {
-        return PathUtil.getGlobalPath(address());
+        return PathUtil.getGlobalPath(localNode.getServerAddress(), address());
     }
 
 
