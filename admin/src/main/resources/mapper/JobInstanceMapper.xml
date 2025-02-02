@@ -189,6 +189,15 @@
                 , end_time = #{timestamp,jdbcType=TIMESTAMP}
             </if>
         </set>
-        where id = #{instance.id,jdbcType=BIGINT}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <update id="updateRunningJobTimeOut">
+        update t_job_instance
+        set status = 2,
+            result = 'TIMEOUT',
+            end_time =  now(),
+            updated_date = now()
+        where status = 1 and reply_time <![CDATA[<]]> #{timestamp,jdbcType=TIMESTAMP}
     </update>
 </mapper>

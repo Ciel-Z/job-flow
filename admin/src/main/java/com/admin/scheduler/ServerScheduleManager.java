@@ -33,6 +33,9 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
         // 任务调度
         addThread("ScheduleJob", ScheduleService.RUNNING_INTERVAL, scheduleService::scheduleJob);
 
+        // 任务心跳检查
+        addThread("CheckJobHeartbeat", ScheduleService.RUNNING_INTERVAL, scheduleService::checkJobHeartbeat);
+
         // 启动所有线程
         threadContainer.forEach(Thread::start);
     }

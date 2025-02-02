@@ -6,7 +6,6 @@ import com.common.constant.Constant;
 import com.common.entity.JobEvent;
 import com.common.entity.JobInstance;
 import com.common.vertx.AbstractEventVerticle;
-import com.worker.config.JobThreadManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,6 +23,6 @@ public class StopJobVerticle extends AbstractEventVerticle<JobInstance> {
 
     @Override
     public void process(JobEvent<JobInstance> jobEvent) {
-        taskThreadManager.stopJob(jobEvent.getBody(), true);
+        taskThreadManager.stopJob(jobEvent.getBody());
     }
 }

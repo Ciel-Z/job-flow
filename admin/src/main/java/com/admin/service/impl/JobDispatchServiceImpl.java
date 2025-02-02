@@ -58,7 +58,8 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         jobInstanceMapper.insert(instance);
         messageDispatcher.dispatcher(jobInfo.getProcessorInfo()).doDispatch(instance).request(instance, JobReport.class, (report, e) -> {
             instance.setStatus(Optional.ofNullable(report).map(JobReport::getStatus).orElse(JobStatusEnum.FAIL.getCode()));
-            instance.setResult(Optional.ofNullable(report).map(JobReport::getResult).orElse(""));
+            instance.setResult(Optional.ofNullable(report).map(JobReport::getResult).orElse(null));
+            instance.setWorkerAddress(Optional.ofNullable(report).map(JobReport::getWorkerAddress).orElse(null));
             if (e != null) {
                 instance.setEndTime(LocalDateTime.now());
                 instance.setResult(e.getMessage());

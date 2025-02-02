@@ -25,15 +25,27 @@ public class JobReport implements Serializable {
      */
     private Throwable throwable;
 
+    //>>>>>>>> 以下为调度相关信息
+
+    /**
+     * 实例 ID
+     */
+    private Long id;
+
+    /**
+     * 任务实例 ID (宏观意义上一次调度, 重试不会变)
+     */
+    private Long instanceId;
+
+    /**
+     * 任务名称
+     */
+    private String jobName;
+
     /**
      * 处理节点地址
      */
     private String workerAddress;
-
-    /**
-     * 任务实例
-     */
-    private JobInstance instance;
 
     /**
      * 时间戳
@@ -56,7 +68,9 @@ public class JobReport implements Serializable {
     }
 
     public JobReport jobInstance(JobInstance instance) {
-        this.instance = instance;
+        this.id = instance.getId();
+        this.instanceId = instance.getInstanceId();
+        this.jobName = instance.getJobName();
         return this;
     }
 

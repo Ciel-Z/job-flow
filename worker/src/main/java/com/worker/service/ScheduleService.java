@@ -2,7 +2,7 @@ package com.worker.service;
 
 import com.common.config.VertxConfiguration;
 import com.common.constant.Constant;
-import com.common.entity.JobHandler;
+import com.worker.entity.JobHandler;
 import com.common.entity.MappingInfo;
 import com.common.entity.NodeInfo;
 import com.common.util.PathUtil;

@@ -34,6 +34,13 @@ public interface JobInfoMapper {
 
     void updateJobServerIp(@Param("jobIds") List<Long> jobIds, @Param("serverIp") String serverIp);
 
+    /**
+     * 查询指定服务器上的任务将执行的任务
+     *
+     * @param serverAddress 服务器地址
+     * @param timestamp     时间戳
+     * @return List<JobInfo>
+     */
     List<JobInfo> selectByServerIpAndLessTimestamp(@Param("serverAddress") String serverAddress, @Param("timestamp") Long timestamp);
 
     @Update("update t_job_info set next_trigger_time = #{nextTriggerTime} where job_id = #{jobId}")

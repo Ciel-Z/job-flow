@@ -33,6 +33,11 @@ public class Constant {
     public static final String DISPATCH_REPORT = "worker:job:report";
 
     /**
+     * 任务日志 path
+     */
+    public static final String JOB_LOG = "job:log";
+
+    /**
      * 任务调度停止 path
      */
     public static final String STOP_JOB = "worker:stop:job";

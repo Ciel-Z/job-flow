@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.admin.mapper.JobLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.common.entity.JobLog">
+        <id property="id" column="id" />
+        <result property="jobId" column="job_id" />
+        <result property="instanceId" column="instance_id" />
+        <result property="workerAddress" column="worker_address" />
+        <result property="timestamp" column="timestamp" />
+        <result property="level" column="level" />
+        <result property="content" column="content" />
+        <result property="createdDate" column="created_date" />
+        <result property="updatedDate" column="updated_date" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,job_id,instance_id,worker_address,`timestamp`,`level`,
+        content,created_date,updated_date
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_job_log
+        where  id = #{id}
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from t_job_log
+        where  id = #{id}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobLog" useGeneratedKeys="true">
+        insert into t_job_log
+        ( id,job_id,instance_id,worker_address,timestamp,level,
+          content,created_date,updated_date)
+        values (#{id},#{jobId},#{instanceId},#{workerAddress},#{timestamp},#{level},
+                #{content},#{createdDate},#{updatedDate})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobLog" useGeneratedKeys="true">
+        insert into t_job_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="jobId != null">job_id,</if>
+            <if test="instanceId != null">instance_id,</if>
+            <if test="workerAddress != null">worker_address,</if>
+            <if test="timestamp != null">timestamp,</if>
+            <if test="level != null">level,</if>
+            <if test="content != null">content,</if>
+            <if test="createdDate != null">created_date,</if>
+            <if test="updatedDate != null">updated_date,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="jobId != null">#{jobId},</if>
+            <if test="instanceId != null">#{instanceId},</if>
+            <if test="workerAddress != null">#{workerAddress},</if>
+            <if test="timestamp != null">#{timestamp},</if>
+            <if test="level != null">#{level},</if>
+            <if test="content != null">#{content},</if>
+            <if test="createdDate != null">#{createdDate},</if>
+            <if test="updatedDate != null">#{updatedDate},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.common.entity.JobLog">
+        update t_job_log
+        <set>
+            <if test="jobId != null">
+                job_id = #{jobId},
+            </if>
+            <if test="instanceId != null">
+                instance_id = #{instanceId},
+            </if>
+            <if test="workerAddress != null">
+                worker_address = #{workerAddress},
+            </if>
+            <if test="timestamp != null">
+                timestamp = #{timestamp},
+            </if>
+            <if test="level != null">
+                level = #{level},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="createdDate != null">
+                created_date = #{createdDate},
+            </if>
+            <if test="updatedDate != null">
+                updated_date = #{updatedDate},
+            </if>
+        </set>
+        where   id = #{id}
+    </update>
+
+    <update id="updateByPrimaryKey" parameterType="com.common.entity.JobLog">
+        update t_job_log
+        set
+            job_id =  #{jobId},
+            instance_id =  #{instanceId},
+            worker_address =  #{workerAddress},
+            timestamp =  #{timestamp},
+            level =  #{level},
+            content =  #{content},
+            created_date =  #{createdDate},
+            updated_date =  #{updatedDate}
+        where   id = #{id}
+    </update>
+
+    <update id="batchInsert" parameterType="com.common.entity.JobLogReport">
+        insert into t_job_log
+        (job_id,instance_id,worker_address,timestamp,level,content)
+        values
+        <foreach collection="jobLogReport.logs" item="item" index="index" separator=",">
+            (#{item.jobId},#{item.instanceId},#{jobLogReport.workerAddress},#{item.timestamp},#{item.level},#{item.content})
+        </foreach>
+    </update>
+</mapper>

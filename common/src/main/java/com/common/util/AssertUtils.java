@@ -32,7 +32,7 @@ public class AssertUtils {
      */
     public static void isNull(Object obj, String message, Object... arguments) throws ServiceException {
         if (obj != null) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -61,7 +61,7 @@ public class AssertUtils {
      */
     public static void isNotNull(Object obj, String message, Object... arguments) throws ServiceException {
         if (obj == null) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -90,7 +90,7 @@ public class AssertUtils {
      */
     public static void isTrue(boolean condition, String message, Object... arguments) throws ServiceException {
         if (!condition) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -119,7 +119,7 @@ public class AssertUtils {
      */
     public static void isFalse(boolean condition, String message, Object... arguments) throws ServiceException {
         if (condition) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -148,7 +148,7 @@ public class AssertUtils {
      */
     public static void empty(String str, String message, Object... arguments) throws ServiceException {
         if (str != null && !str.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -179,7 +179,7 @@ public class AssertUtils {
     public static void notEmpty(String str, String message, Object... arguments) throws ServiceException {
         isNotNull(str, message);
         if (str.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -208,7 +208,7 @@ public class AssertUtils {
      */
     public static void empty(Collection<?> collection, String message, Object... arguments) throws ServiceException {
         if (collection != null && !collection.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -237,7 +237,7 @@ public class AssertUtils {
      */
     public static void notEmpty(Collection<?> collection, String message, Object... arguments) throws ServiceException {
         if (collection == null || collection.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -266,7 +266,7 @@ public class AssertUtils {
      */
     public static void empty(Object[] array, String message, Object... arguments) throws ServiceException {
         if (array != null && array.length > 0) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -295,7 +295,7 @@ public class AssertUtils {
      */
     public static void notEmpty(Object[] array, String message, Object... arguments) throws ServiceException {
         if (array == null || array.length == 0) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -324,7 +324,7 @@ public class AssertUtils {
      */
     public static void empty(Map<?, ?> map, String message, Object... arguments) throws ServiceException {
         if (map != null && !map.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
     }
 
@@ -353,29 +353,7 @@ public class AssertUtils {
      */
     public static void notEmpty(Map<?, ?> map, String message, Object... arguments) throws ServiceException {
         if (map == null || map.isEmpty()) {
-            throw new ServiceException(formatStringWithPlaceholders(message, arguments));
+            throw new ServiceException(StringUtil.formatWithPlaceholders(message, arguments));
         }
-    }
-
-
-    /**
-     * Replace placeholders {} with the provided arguments in the template string.
-     *
-     * @param template The template string containing {} as placeholders.
-     * @param args     The arguments to replace the placeholders with.
-     * @return The formatted string with placeholders replaced by the provided arguments.
-     */
-    private static String formatStringWithPlaceholders(String template, Object... args) {
-        String[] parts = template.split("\\{\\}", -1);
-        StringBuilder result = new StringBuilder(parts[0]);
-        int i = 0;
-        for (; i < args.length && i < parts.length - 1; i++) {
-            result.append(args[i]).append(parts[i + 1]);
-        }
-        // Append the remaining parts if there are more placeholders than arguments
-        for (int j = i + 1; j < parts.length; j++) {
-            result.append(parts[j]);
-        }
-        return result.toString();
     }
 }

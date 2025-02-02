@@ -3,6 +3,9 @@ package com.admin.mapper;
 import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Param;
+
+import java.time.LocalDateTime;
 
 /**
  * @author zuobin
@@ -28,4 +31,11 @@ public interface JobInstanceMapper {
     void deleteByJobId(Long jobId);
 
     void updateByEvent(JobReport jobReport);
+
+    /**
+     * 更新任务执行超时 | 心跳超时终止
+     *
+     * @param timestamp 时间戳
+     */
+    void updateRunningJobTimeOut(@Param("timestamp") LocalDateTime timestamp);
 }

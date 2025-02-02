@@ -1,6 +1,7 @@
 package com.admin.service;
 
 import com.admin.mapper.JobInfoMapper;
+import com.admin.mapper.JobInstanceMapper;
 import com.admin.util.CronUtil;
 import com.common.config.VertxConfiguration;
 import com.common.constant.Constant;
@@ -42,6 +43,8 @@ public class ScheduleService implements InitializingBean {
 
     private final JobInfoMapper jobInfoMapper;
 
+    private final JobInstanceMapper jobInstanceMapper;
+
     private final JobDispatchService jobDispatchService;
 
     private MultiMap<String, MappingInfo> featureHolderMap;
@@ -79,14 +82,15 @@ public class ScheduleService implements InitializingBean {
      * 任务调度 | 尝试将逾期未处理的任务重新分配
      */
     public void processOverdueJob() {
+        String lock = "processOverdueJob";
         IMap<String, NodeInfo> serverNodeMap = hazelcast.getMap(Constant.SERVER_LIST);
-        if (serverNodeMap.isEmpty() || serverNodeMap.isLocked("processOverdueJob")) {
+        if (serverNodeMap.isEmpty() || serverNodeMap.isLocked(lock)) {
             return;
         }
         boolean locked = false;
         try {
             // 尝试将逾期未处理的任务重新分配
-            locked = serverNodeMap.tryLock("processOverdueJob", RUNNING_INTERVAL, TimeUnit.MILLISECONDS);
+            locked = serverNodeMap.tryLock(lock, RUNNING_INTERVAL, TimeUnit.MILLISECONDS);
             if (locked) {
                 Long timestamp = System.currentTimeMillis() - RUNNING_INTERVAL * 2;
                 List<Long> jobIds = jobInfoMapper.selectOverdueJob(timestamp);
@@ -109,7 +113,7 @@ public class ScheduleService implements InitializingBean {
             log.error("Schedule job error: {}", e.getMessage(), e);
         } finally {
             if (locked) {
-                serverNodeMap.unlock("processOverdueJob");
+                serverNodeMap.unlock(lock);
             }
         }
     }
@@ -132,6 +136,28 @@ public class ScheduleService implements InitializingBean {
         }
     }
 
+    public void checkJobHeartbeat() {
+        String lock = "checkJobHeartbeat";
+        if (serverNodeMap.isLocked(lock)) {
+            return;
+        }
+        boolean locked = false;
+        try {
+            // 将心跳超时的任务设置为失败
+            locked = serverNodeMap.tryLock(lock, RUNNING_INTERVAL, TimeUnit.MILLISECONDS);
+            if (locked) {
+                LocalDateTime timestamp = LocalDateTime.now().minusSeconds(RUNNING_INTERVAL * 4);
+                jobInstanceMapper.updateRunningJobTimeOut(timestamp);
+            }
+        } catch (Exception e) {
+            log.error("Schedule job error: {}", e.getMessage(), e);
+        } finally {
+            if (locked) {
+                serverNodeMap.unlock(lock);
+            }
+        }
+    }
+
     private void register(List<String> addresslist) {
         for (String address : addresslist) {
             featureHolderMap.put(address, MappingInfo.of(localNode.getServerAddress(), vertxConfiguration.getTag()));
@@ -147,4 +173,5 @@ public class ScheduleService implements InitializingBean {
     private boolean isNodeOffline(NodeInfo nodeInfo) {
         return Duration.between(nodeInfo.getTimestamp(), LocalDateTime.now()).getSeconds() > vertxConfiguration.getTimeout();
     }
+
 }

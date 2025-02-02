@@ -161,6 +161,7 @@
             #{jobId}
         </foreach>
     </update>
+
     <select id="selectPage" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>

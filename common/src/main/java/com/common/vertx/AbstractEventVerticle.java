@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +69,18 @@ public abstract class AbstractEventVerticle<T> extends AbstractVerticle{
 
 
     @SuppressWarnings("unchecked")
-    private Class<T> getClassType() {
-        return (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+    protected Class<T> getClassType() {
+        Type type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+
+        // Class
+        if (type instanceof Class) {
+            return (Class<T>) type;
+        }
+
+        // ParameterizedType
+        if (type instanceof ParameterizedType) {
+            return (Class<T>) ((ParameterizedType) type).getRawType(); // 获取原始类型 List.class
+        }
+        throw new IllegalArgumentException("Can't get class type");
     }
 }

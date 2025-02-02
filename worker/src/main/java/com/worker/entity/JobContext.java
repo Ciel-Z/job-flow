@@ -1,6 +1,7 @@
-package com.common.entity;
+package com.worker.entity;
 
 import com.hazelcast.map.IMap;
+import com.worker.logger.JobLogger;
 import lombok.Data;
 
 /**
@@ -11,11 +12,15 @@ public class JobContext {
 
     private Long jobId;
 
+    private String jobName;
+
     private Long instanceId;
 
     private Long workflowId;
 
     private String params;
+
+    private JobLogger logger;
 
     private IMap<String, Object> workflowContext;
 

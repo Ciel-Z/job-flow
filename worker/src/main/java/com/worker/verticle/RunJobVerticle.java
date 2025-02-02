@@ -3,12 +3,17 @@ package com.worker.verticle;
 import com.alibaba.fastjson2.JSON;
 import com.common.annotation.VerticlePath;
 import com.common.constant.Constant;
-import com.common.entity.*;
+import com.common.entity.JobEvent;
+import com.common.entity.JobInstance;
+import com.common.entity.JobReport;
+import com.common.entity.NodeInfo;
 import com.common.util.AssertUtils;
 import com.common.vertx.AbstractEventVerticle;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
-import com.worker.config.JobThreadManager;
+import com.worker.entity.JobContext;
+import com.worker.entity.JobHandler;
+import com.worker.logger.DefaultJobLogger;
+import com.worker.logger.LoggerHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +28,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @VerticlePath(Constant.DISPATCH)
 public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
+
+    private final LoggerHandler loggerHandler;
 
     private final HazelcastInstance hazelcast;
 
@@ -46,7 +53,7 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
                 return;
             }
             reply(result.jobInstance(instance));
-            taskThreadManager.stopJob(instance, false);
+            taskThreadManager.stopJob(instance);
         });
         log.info("RunJobVerticle dispatched {} jobName = {}", instance.getProcessorInfo(), instance.getJobName());
     }
@@ -59,14 +66,14 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
             AssertUtils.isNotNull(job, "{} 任务处理器未找到", instance.getProcessorInfo());
 
             // 任务处理器类型校验
-            AssertUtils.isTrue(job instanceof JobHandler, "{} 任务处理器未实现 com.common.entity.JobHandler 接口", instance.getProcessorInfo());
+            AssertUtils.isTrue(job instanceof JobHandler, "{} 任务处理器未实现 com.worker.entity.JobHandler 接口", instance.getProcessorInfo());
             JobHandler handler = (JobHandler) job;
 
             // 整理上下文
-            IMap<String, Object> workflowContext = hazelcast.getMap(String.valueOf(instance.getFlowInstanceId()));
             JobContext jobContext = new JobContext();
             BeanUtils.copyProperties(instance, jobContext);
-            jobContext.setWorkflowContext(workflowContext);
+            jobContext.setLogger(new DefaultJobLogger(instance, loggerHandler));
+            jobContext.setWorkflowContext(hazelcast.getMap(String.valueOf(instance.getFlowInstanceId())));
 
             // 执行任务
             JobReport handle = handler.handle(jobContext);

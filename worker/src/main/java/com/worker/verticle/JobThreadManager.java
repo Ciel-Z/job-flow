@@ -1,9 +1,12 @@
-package com.worker.config;
+package com.worker.verticle;
 
+import com.alibaba.fastjson2.JSON;
 import com.common.constant.Constant;
 import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
+import com.common.entity.NodeInfo;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.worker.config.WorkerConfigure;
 import io.vertx.core.Vertx;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
@@ -27,6 +30,8 @@ public class JobThreadManager implements InitializingBean {
 
     private final WorkerConfigure configure;
 
+    private final NodeInfo nodeInfo;
+
     private ExecutorService jobExecutor;
 
     private ScheduledExecutorService monitorExecutor;
@@ -34,7 +39,7 @@ public class JobThreadManager implements InitializingBean {
     private Map<Long, JobThreadHolder<?>> jobMap;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         // 任务线程池
         WorkerConfigure.JobThreadConfigure jobThreadPool = configure.getJobThreadPool();
         ThreadFactory jobFactory = new ThreadFactoryBuilder().setNameFormat(jobThreadPool.getThreadNameFormat()).build();
@@ -63,17 +68,15 @@ public class JobThreadManager implements InitializingBean {
         jobFuture.whenComplete(callback);
 
         // 监控任务执行状态
-        ScheduledFuture<?> monitorFuture = monitorExecutor.scheduleWithFixedDelay(() -> statusReport(instance, jobFuture), 15, 15, TimeUnit.SECONDS);
+        ScheduledFuture<?> monitorFuture = monitorExecutor.scheduleAtFixedRate(() -> statusReport(instance, jobFuture), 5, 15, TimeUnit.SECONDS);
         jobMap.put(instance.getId(), JobThreadHolder.of(jobFuture, monitorFuture));
     }
 
 
-    public void stopJob(JobInstance instance, boolean isForceStop) {
+    public void stopJob(JobInstance instance) {
         JobThreadHolder<?> jobThreadHolder = jobMap.remove(instance.getId());
+        Optional.ofNullable(jobThreadHolder.getJobfuture()).ifPresent(f -> f.cancel(true));
         Optional.ofNullable(jobThreadHolder.getMonitorFuture()).ifPresent(f -> f.cancel(true));
-        if (isForceStop) {
-            Optional.ofNullable(jobThreadHolder.getJobfuture()).ifPresent(f -> f.cancel(true));
-        }
     }
 
 
@@ -92,7 +95,8 @@ public class JobThreadManager implements InitializingBean {
         } else { // job done
             return;
         }
-        vertx.eventBus().send(Constant.DISPATCH_REPORT, report.jobInstance(instance));
+        String jsonString = JSON.toJSONString(report.workerAddress(nodeInfo.getServerAddress()).jobInstance(instance));
+        vertx.eventBus().send(Constant.DISPATCH_REPORT, jsonString);
     }
 
 
