@@ -53,7 +53,12 @@ public class Constant {
     public static final String JOB_FLOW_TERMINATION = "JobFlowTermination";
 
     /**
-     * 任务事件 websocket 地址
+     * 工作流事件
      */
-    public static final String JOB_EVENT_WS_ADDRESS = "/ws/task";
+    public static final String JOB_FLOW_EVENT = "jobFlowEvent";
+
+    /**
+     * 工作流事件 websocket 地址
+     */
+    public static final String JOB_EVENT_WS_ADDRESS = "/ws/job/flow";
 }

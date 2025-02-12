@@ -1,6 +1,8 @@
 package com.common.entity;
 
+import com.alibaba.fastjson2.JSON;
 import com.common.dag.JobFlowDAG;
+import com.common.dag.NodeEdgeDAG;
 import com.common.util.DAGUtil;
 import lombok.Data;
 
@@ -73,11 +75,20 @@ public class JobFlowInstance {
     private LocalDateTime updatedDate;
 
 
+    public NodeEdgeDAG getNodeEdgeDAG() {
+        return JSON.parseObject(this.dag, NodeEdgeDAG.class);
+    }
+
     public JobFlowDAG getJobFlowDAG() {
-        return DAGUtil.fromJSONString(this.dag);
+        NodeEdgeDAG nodeEdgeDAG = JSON.parseObject(this.dag, NodeEdgeDAG.class);
+        return DAGUtil.convert(nodeEdgeDAG);
+    }
+
+    public void setNodeEdgeDAG(NodeEdgeDAG nodeEdgeDAG) {
+        this.dag = JSON.toJSONString(nodeEdgeDAG);
     }
 
     public void setJobFlowDAG(JobFlowDAG jobFlowDAG) {
-        this.dag = DAGUtil.toJSONString(jobFlowDAG);
+        this.dag = JSON.toJSONString(DAGUtil.convert(jobFlowDAG));
     }
 }

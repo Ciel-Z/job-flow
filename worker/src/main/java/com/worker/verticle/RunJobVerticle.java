@@ -73,7 +73,7 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
             JobContext jobContext = new JobContext();
             BeanUtils.copyProperties(instance, jobContext);
             jobContext.setLogger(new DefaultJobLogger(instance, loggerHandler));
-            jobContext.setWorkflowContext(hazelcast.getMap(String.valueOf(instance.getFlowInstanceId())));
+            jobContext.setWorkflowContext(hazelcast.getMap(String.format("job_flow_%d",instance.getFlowInstanceId())));
 
             // 执行任务
             JobReport handle = handler.handle(jobContext);

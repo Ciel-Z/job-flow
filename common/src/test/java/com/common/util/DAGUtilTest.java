@@ -1,5 +1,6 @@
 package com.common.util;
 
+import com.alibaba.fastjson2.JSON;
 import com.common.dag.JobFlowDAG;
 import com.common.dag.NodeEdgeDAG;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,18 +32,21 @@ class DAGUtilTest {
 
         NodeEdgeDAG nodeEdgeDAG = new NodeEdgeDAG(nodes, edges);
 
-        System.out.println("==== 原始 NodeEdgeDAG ====");
-        printNodeEdgeDAG(nodeEdgeDAG);
+        String jsonString = JSON.toJSONString(nodeEdgeDAG);
+        System.out.println(JSON.parseObject(jsonString, NodeEdgeDAG.class));
 
-        // 2. 转换为 JobFlowDAG（前驱/后继形式）
-        JobFlowDAG jobFlowDAG = DAGUtil.convert(nodeEdgeDAG);
-        System.out.println("\n==== 转换后的 JobFlowDAG ====");
-        printJobFlowDAG(jobFlowDAG);
-
-        // 3. 再将 JobFlowDAG 转换回 NodeEdgeDAG
-        NodeEdgeDAG convertedBack = DAGUtil.convert(jobFlowDAG);
-        System.out.println("\n==== 转换回的 NodeEdgeDAG ====");
-        printNodeEdgeDAG(convertedBack);
+//        System.out.println("==== 原始 NodeEdgeDAG ====");
+//        printNodeEdgeDAG(nodeEdgeDAG);
+//
+//        // 2. 转换为 JobFlowDAG（前驱/后继形式）
+//        JobFlowDAG jobFlowDAG = DAGUtil.convert(nodeEdgeDAG);
+//        System.out.println("\n==== 转换后的 JobFlowDAG ====");
+//        printJobFlowDAG(jobFlowDAG);
+//
+//        // 3. 再将 JobFlowDAG 转换回 NodeEdgeDAG
+//        NodeEdgeDAG convertedBack = DAGUtil.convert(jobFlowDAG);
+//        System.out.println("\n==== 转换回的 NodeEdgeDAG ====");
+//        printNodeEdgeDAG(convertedBack);
 
     }
 

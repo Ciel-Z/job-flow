@@ -7,7 +7,6 @@ import com.admin.mapper.JobInfoMapper;
 import com.admin.service.JobFlowService;
 import com.admin.vo.JobFlowVO;
 import com.alibaba.fastjson2.JSON;
-import com.common.dag.JobFlowDAG;
 import com.common.dag.NodeEdgeDAG;
 import com.common.entity.JobFlow;
 import com.common.entity.JobFlowInstance;
@@ -48,8 +47,7 @@ public class JobFlowServiceImpl implements JobFlowService {
         // Save JobFlow
         JobFlow jobFlow = new JobFlow();
         BeanUtils.copyProperties(jobFlowVO, jobFlow);
-        JobFlowDAG jobFlowDAG = DAGUtil.convert(jobFlowVO.getDag());
-        jobFlow.setDag(DAGUtil.toJSONString(jobFlowDAG));
+        jobFlow.setDag(JSON.toJSONString(jobFlowVO.getDag()));
         if (jobFlowVO.getFlowId() == null) {
             jobFlowMapper.insert(jobFlow);
         } else {
@@ -73,7 +71,7 @@ public class JobFlowServiceImpl implements JobFlowService {
         }
         JobFlowVO jobFlowVO = new JobFlowVO();
         BeanUtils.copyProperties(jobFlow, jobFlowVO);
-        NodeEdgeDAG dag = JSON.parseObject(jobFlow.getDag(), NodeEdgeDAG.class);
+        NodeEdgeDAG dag = DAGUtil.fromJSONString(jobFlow.getDag());
         jobFlowVO.setDag(dag);
         return jobFlowVO;
     }

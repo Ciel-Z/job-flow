@@ -43,7 +43,8 @@
 
     <select id="selectPageByCondition" resultMap="BaseResultMap">
         select
-            <include refid="Base_Column_List" />
+            id,flow_id,version,`name`,status,`result`,params,
+            trigger_time,end_time,created_date,updated_date
         from t_job_flow_instance
         <where>
             <if test="flowId != null">

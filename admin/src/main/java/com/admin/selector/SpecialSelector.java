@@ -2,17 +2,14 @@ package com.admin.selector;
 
 import com.common.entity.JobInstance;
 import com.common.util.AssertUtils;
-import com.common.util.PathUtil;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Getter
 @Component
@@ -36,10 +33,10 @@ public class SpecialSelector implements Selector {
         List<String> available = getAvailable(address, instance.getTag());
         AssertUtils.notEmpty(available, "No available nodes for processorInfo: " + address);
 
-        Map<String, String> realAddressMap = available.stream().collect(Collectors.toMap(availableAddress -> availableAddress.split(PathUtil.PATH_SEPARATOR)[0], Function.identity()));
+        HashSet<String> availableSet = new HashSet<>(available);
         for (String worker : workers) {
-            if (realAddressMap.containsKey(worker)) {
-                return realAddressMap.get(worker);
+            if (availableSet.contains(worker)) {
+                return worker;
             }
         }
         throw new IllegalStateException("No available worker nodes for processorInfo: " + address);

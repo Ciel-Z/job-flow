@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Lazy
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -39,7 +41,7 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         threadContainer.forEach(Thread::interrupt);
     }
 
@@ -51,12 +53,8 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
     public record SafeLoopRunnable(Runnable task, Long runningInterval) implements Runnable {
         @Override
         public void run() {
-            boolean isFirst = true;
             while (true) {
                 try {
-                    if (!isFirst) {
-                        Thread.sleep(runningInterval);
-                    }
                     long start = System.currentTimeMillis();
                     task.run();
                     long cost = System.currentTimeMillis() - start;
@@ -71,7 +69,6 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
                     log.error("[{}] task has exception: {}", Thread.currentThread().getName(), e.getMessage(), e);
                     break;
                 }
-                isFirst = false;
             }
         }
     }

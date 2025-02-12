@@ -50,9 +50,8 @@ public class JobThreadManager implements InitializingBean {
         jobExecutor = new ThreadPoolExecutor(jobThreadPool.getCorePoolSize(), jobThreadPool.getMaxPoolSize(), jobThreadPool.getKeepAliveSeconds(), TimeUnit.MILLISECONDS, taskQueue, jobFactory);
 
         // 任务监控线程池
-        final int availableProcessors = Runtime.getRuntime().availableProcessors();
         ThreadFactory monitorFactory = new ThreadFactoryBuilder().setNameFormat(String.join("-", "monitor", jobThreadPool.getThreadNameFormat())).build();
-        monitorExecutor = new ScheduledThreadPoolExecutor(availableProcessors, monitorFactory);
+        monitorExecutor = new ScheduledThreadPoolExecutor(jobThreadPool.getCorePoolSize(), monitorFactory);
 
         jobMap = new ConcurrentHashMap<>();
     }

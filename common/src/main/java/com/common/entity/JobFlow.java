@@ -1,7 +1,5 @@
 package com.common.entity;
 
-import com.common.dag.JobFlowDAG;
-import com.common.util.DAGUtil;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -42,11 +40,4 @@ public class JobFlow {
      * 更新时间
      */
     private LocalDateTime updatedDate;
-
-    /**
-     * 工作流 DAG
-     */
-    public JobFlowDAG getJobFlowDAG() {
-        return DAGUtil.fromJSONString(this.dag);
-    }
 }

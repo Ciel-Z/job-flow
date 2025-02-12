@@ -3,6 +3,7 @@ package com.admin.verticle;
 import com.admin.mapper.JobFlowInstanceMapper;
 import com.admin.mapper.JobInstanceMapper;
 import com.admin.service.JobFlowDispatchService;
+import com.alibaba.fastjson2.JSON;
 import com.common.annotation.VerticlePath;
 import com.common.constant.Constant;
 import com.common.dag.JobFlowDAG;
@@ -13,6 +14,7 @@ import com.common.entity.JobReport;
 import com.common.enums.JobStatusEnum;
 import com.common.util.DAGUtil;
 import com.common.vertx.AbstractEventVerticle;
+import com.hazelcast.core.HazelcastInstance;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -28,6 +30,8 @@ import java.util.concurrent.Callable;
 @RequiredArgsConstructor
 @VerticlePath(Constant.DISPATCH_REPORT)
 public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
+
+    private final HazelcastInstance hazelcast;
 
     private final JobInstanceMapper jobInstanceMapper;
 
@@ -68,13 +72,15 @@ public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
         }
 
         // 更新当前节点信息
-        JobFlowDAG dag = flowInstance.getJobFlowDAG();
+        NodeEdgeDAG nodeEdgeDAG = flowInstance.getNodeEdgeDAG();
+        JobFlowDAG dag = DAGUtil.convert(nodeEdgeDAG);
         NodeEdgeDAG.Node edgeNode = dag.getNode(jobReport.getFlowNodeId()).getNode();
         BeanUtils.copyProperties(jobReport, edgeNode);
+        edgeNode.setEndTime(jobReport.getTimestamp());
 
         // 工作流实例已停止仅更新此节点信息 | 可能情况 1.其他节点已报错 2.页面触发强制停止
         if (STOPPED_STATUSES.contains(flowInstance.getStatus())) {
-            updateInstance(dag, flowInstance);
+            updateInstance(nodeEdgeDAG, flowInstance);
             return;
         }
 
@@ -83,7 +89,7 @@ public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
             flowInstance.setStatus(jobReport.getStatus());
             flowInstance.setEndTime(jobReport.getTimestamp());
             flowInstance.setResult(String.format("[%d %s] 任务出现问题", edgeNode.getNodeId(), edgeNode.getNodeName()));
-            updateInstance(dag, flowInstance);
+            updateInstance(nodeEdgeDAG, flowInstance);
             return;
         }
 
@@ -92,7 +98,7 @@ public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
             flowInstance.setStatus(JobStatusEnum.SUCCESS.getCode());
             flowInstance.setEndTime(jobReport.getTimestamp());
             flowInstance.setResult("工作流全部任务执行成功");
-            updateInstance(dag, flowInstance);
+            updateInstance(nodeEdgeDAG, flowInstance);
             return;
         }
 
@@ -103,7 +109,7 @@ public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
             node.setStartTime(LocalDateTime.now());
             node.setStatus(JobStatusEnum.DISPATCH.getCode());
         });
-        updateInstance(dag, flowInstance);
+        updateInstance(nodeEdgeDAG, flowInstance);
 
         // 启动就绪任务
         for (NodeEdgeDAG.Node readyNode : readyNodes) {
@@ -111,8 +117,10 @@ public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
         }
     }
 
-    private void updateInstance(JobFlowDAG dag, JobFlowInstance flowInstance) {
-        flowInstance.setJobFlowDAG(dag);
+    private void updateInstance(NodeEdgeDAG dag, JobFlowInstance flowInstance) {
+        flowInstance.setDag(JSON.toJSONString(dag));
         jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
+        // 发送任务流实例状态更新消息
+//        hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publish(JSON.toJSONString(flowInstance));
     }
 }

@@ -14,12 +14,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.core.annotation.Order;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+@Order(0)
 @Slf4j
 @Configuration
 @RequiredArgsConstructor

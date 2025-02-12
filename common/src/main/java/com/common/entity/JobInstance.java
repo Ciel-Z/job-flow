@@ -49,11 +49,6 @@ public class JobInstance implements Serializable, Cloneable {
     private Integer dispatchStrategy;
 
     /**
-     * 额外信息
-     */
-    private String extra;
-
-    /**
      * worker tag
      */
     private String tag;

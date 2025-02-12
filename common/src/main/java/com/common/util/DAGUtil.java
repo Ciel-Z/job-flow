@@ -1,10 +1,9 @@
 package com.common.util;
 
+import com.alibaba.fastjson2.JSON;
 import com.common.dag.JobFlowDAG;
 import com.common.dag.NodeEdgeDAG;
 import com.common.enums.JobStatusEnum;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,6 +95,14 @@ public class DAGUtil {
                     nodeMap.put(edgeNode.getNodeId(), edgeNode);
                     nodeList.add(edgeNode);
                 }
+                if (edgeNode == null || edgeNode.getNodeId() == null) {
+                    continue;
+                }
+                // 收集边
+                for (JobFlowDAG.Node successor : jobNode.getSuccessors()) {
+                    NodeEdgeDAG.Edge edge = new NodeEdgeDAG.Edge(edgeNode.getNodeId(), successor.getNodeId());
+                    edgeList.add(edge);
+                }
             }
         }
 
@@ -180,28 +187,11 @@ public class DAGUtil {
     }
 
 
-    public static String toJSONString(JobFlowDAG dag) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            objectMapper.registerModule(new JavaTimeModule());
-            return objectMapper.writeValueAsString(dag);
-        } catch (Exception e) {
-            log.error("Error converting JobFlowDAG to JSON string", e);
-            return "{}";
-        }
+
+    public static NodeEdgeDAG fromJSONString(String jsonString) {
+        return Optional.ofNullable(JSON.parseObject(jsonString, NodeEdgeDAG.class)).orElse(new NodeEdgeDAG());
     }
 
-
-    public static JobFlowDAG fromJSONString(String jsonString) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            objectMapper.registerModule(new JavaTimeModule());
-            return objectMapper.readValue(jsonString, JobFlowDAG.class);
-        } catch (Exception e) {
-            log.error("Error converting JSON string to JobFlowDAG", e);
-            return new JobFlowDAG();
-        }
-    }
 
     /**
      * 获取 DAG 中所有就绪的任务列表。一个任务就绪的条件是：所有依赖的任务都已成功。

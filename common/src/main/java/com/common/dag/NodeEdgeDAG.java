@@ -129,4 +129,8 @@ public class NodeEdgeDAG {
         this.edges = edges == null ? Lists.newLinkedList() : edges;
     }
 
+    public NodeEdgeDAG() {
+        this.nodes = Lists.newLinkedList();
+        this.edges = Lists.newLinkedList();
+    }
 }

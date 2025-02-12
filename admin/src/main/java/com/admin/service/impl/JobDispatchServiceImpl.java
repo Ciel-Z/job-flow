@@ -150,7 +150,7 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         // 任务实例所属于任务流
         JobFlowInstance flowInstance = jobFlowInstanceMapper.selectByPrimaryKey(instance.getFlowInstanceId());
         JobFlowDAG dag = flowInstance.getJobFlowDAG();
-        NodeEdgeDAG.Node node = dag.getNodeMap().get(instance.getFlowNodeId()).getNode();
+        NodeEdgeDAG.Node node = dag.getNode((instance.getFlowNodeId())).getNode();
         BeanUtils.copyProperties(instance, node);
         flowInstance.setJobFlowDAG(dag);
         flowInstance.setStatus(instance.getStatus());
@@ -159,5 +159,7 @@ public class JobDispatchServiceImpl implements JobDispatchService {
             flowInstance.setResult(node.errorMassage());
         }
         jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
+        // 发送任务流实例状态更新消息
+//        hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publish(JSON.toJSONString(flowInstance));
     }
 }

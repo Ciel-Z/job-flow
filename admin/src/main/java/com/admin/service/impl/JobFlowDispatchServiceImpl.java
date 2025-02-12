@@ -5,6 +5,7 @@ import com.admin.mapper.JobFlowMapper;
 import com.admin.mapper.JobInfoMapper;
 import com.admin.service.JobDispatchService;
 import com.admin.service.JobFlowDispatchService;
+import com.alibaba.fastjson2.JSON;
 import com.common.constant.Constant;
 import com.common.dag.JobFlowDAG;
 import com.common.dag.NodeEdgeDAG;
@@ -32,8 +33,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
 
-    // lock + websocket 通知
-
     private final HazelcastInstance hazelcast;
 
     private final JobInfoMapper jobInfoMapper;
@@ -50,8 +49,8 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
         AssertUtils.isNotNull(jobFlow, "工作流不存在");
         AssertUtils.notEmpty(jobFlow.getDag(), "DAG为空");
 
-        JobFlowDAG jobDAG = jobFlow.getJobFlowDAG();
-        NodeEdgeDAG edgeDAG = DAGUtil.convert(jobDAG);
+        NodeEdgeDAG edgeDAG = JSON.parseObject(jobFlow.getDag(), NodeEdgeDAG.class);
+        JobFlowDAG jobDAG = DAGUtil.convert(edgeDAG);
         Set<Long> jobIds = edgeDAG.getNodes().stream().map(NodeEdgeDAG.Node::getJobId).collect(Collectors.toSet());
         AssertUtils.notEmpty(jobIds, "工作流为空");
 
@@ -67,7 +66,7 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
         instance.setStatus(JobStatusEnum.RUNNING.getCode());
         initDag(jobDAG);
         instance.setVersion(0);
-        instance.setJobFlowDAG(jobDAG);
+        instance.setNodeEdgeDAG(edgeDAG);
         jobFlowInstanceMapper.insert(instance);
 
         // 启动根节点对应任务
@@ -81,22 +80,21 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
     public void stop(Long instanceId) {
         JobFlowInstance instance = jobFlowInstanceMapper.selectByPrimaryKey(instanceId);
         AssertUtils.isNotNull(instance, "工作流实例不存在");
-        AssertUtils.isTrue(instance.getStatus() > 1, "工作流状态不支持停止");
+        AssertUtils.isTrue(instance.getStatus() == 1, "工作流状态不支持停止");
 
         // 更新工作流实例及 DAG
         instance.setStatus(JobStatusEnum.FAIL.getCode());
         instance.setEndTime(LocalDateTime.now());
         instance.setResult("工作流被强制停止");
-        JobFlowDAG dag = instance.getJobFlowDAG();
-        for (JobFlowDAG.Node jobNode : dag.getNodeMap().values()) {
-            NodeEdgeDAG.Node node = jobNode.getNode();
+        NodeEdgeDAG dag = instance.getNodeEdgeDAG();
+        for (NodeEdgeDAG.Node node : dag.getNodes()) {
             if (JobStatusEnum.RUNNING.getCode().equals(node.getStatus())) {
                 node.setStatus(JobStatusEnum.FAIL.getCode());
                 node.setEndTime(LocalDateTime.now());
                 node.setResult("工作流被强制停止");
             }
         }
-        instance.setJobFlowDAG(dag);
+        instance.setNodeEdgeDAG(dag);
         jobFlowInstanceMapper.updateByPrimaryKey(instance);
         jobFlowInstanceMapper.updateVersionById(instance);
 
@@ -110,7 +108,7 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
     public void retry(Long flowInstanceId, Long nodeId) {
         JobFlowInstance instance = jobFlowInstanceMapper.selectByPrimaryKey(flowInstanceId);
         AssertUtils.isNotNull(instance, "工作流实例不存在");
-        AssertUtils.isTrue(instance.getStatus() == 1, "工作流状态不支持重试");
+        AssertUtils.isTrue(instance.getStatus() > 1, "工作流状态不支持重试");
 
         // 获取 DAG
         JobFlowDAG dag = instance.getJobFlowDAG();
