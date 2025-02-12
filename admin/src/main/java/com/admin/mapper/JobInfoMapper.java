@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author zuobin
@@ -45,4 +46,12 @@ public interface JobInfoMapper {
 
     @Update("update t_job_info set next_trigger_time = #{nextTriggerTime} where job_id = #{jobId}")
     void updateJobNextTriggerTime(@Param("jobId") Long jobId, @Param("nextTriggerTime") Long nextTriggerTime);
+
+    /**
+     * 根据任务ID列表查询任务ID (快速确定任务是否存在)
+     *
+     * @param jobIds 任务ID列表
+     * @return int
+     */
+    Set<Long> selectIdByIds(@Param("jobIds") Set<Long> jobIds);
 }

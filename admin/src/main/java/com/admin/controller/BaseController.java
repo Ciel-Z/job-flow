@@ -27,7 +27,7 @@ public class BaseController {
     protected static void startPage() {
         Integer pageNum = Convert.toInt(ServletUtils.getParameter(PAGE_NUM), 1);
         Integer pageSize = Convert.toInt(ServletUtils.getParameter(PAGE_SIZE), 10);
-        Boolean reasonable = ServletUtils.getParameterToBool(REASONABLE);
+        Boolean reasonable = ServletUtils.getParameterToBool(REASONABLE, true);
         PageHelper.startPage(pageNum, pageSize).setReasonable(reasonable);
     }
 }

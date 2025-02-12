@@ -21,7 +21,7 @@ public enum JobStatusEnum {
     PAUSE(4, "暂停");
 
 
-    private final int code;
+    private final Integer code;
     private final String description;
 
 
@@ -30,7 +30,7 @@ public enum JobStatusEnum {
         this.description = description;
     }
 
-    public JobStatusEnum of(int code) {
+    public static JobStatusEnum of(int code) {
         for (JobStatusEnum value : values()) {
             if (value.code == code) {
                 return value;

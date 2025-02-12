@@ -21,7 +21,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     }
 
-    // TODO 换成新的 ws
+    // TODO ws
 //
 //    private final WebSocketJobHandler webSocketJobHandler;
 //

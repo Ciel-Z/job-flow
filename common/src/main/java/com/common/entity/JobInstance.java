@@ -34,9 +34,14 @@ public class JobInstance implements Serializable, Cloneable {
     private Long instanceId;
 
     /**
-     * 任务流实例 ID
+     * 工作流实例 ID
      */
     private Long flowInstanceId;
+
+    /**
+     * 工作流节点 ID
+     */
+    private Long flowNodeId;
 
     /**
      * 调度策略 (1-轮询, 2-随机, 3-hash, 4-指定)
@@ -115,10 +120,15 @@ public class JobInstance implements Serializable, Cloneable {
      */
     private Long currentRetryTimes;
 
+    /**
+     * 任务流版本
+     */
+    private Integer jobFlowVersion;
+
     @Override
-    public com.common.entity.JobInstance clone() {
+    public JobInstance clone() {
         try {
-            com.common.entity.JobInstance clone = (com.common.entity.JobInstance) super.clone();
+            JobInstance clone = (JobInstance) super.clone();
             clone.setId(null);
             clone.setEndTime(null);
             clone.setResult(null);

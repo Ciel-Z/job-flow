@@ -43,9 +43,14 @@ public class Constant {
     public static final String STOP_JOB = "worker:stop:job";
 
     /**
-     * 任务状态机
+     * 任务实例终止标识
      */
-    public static final String STATE_MACHINE = "StateMachine";
+    public static final String JOB_TERMINATION = "JobTermination";
+
+    /**
+     * 工作流实例终止标识
+     */
+    public static final String JOB_FLOW_TERMINATION = "JobFlowTermination";
 
     /**
      * 任务事件 websocket 地址

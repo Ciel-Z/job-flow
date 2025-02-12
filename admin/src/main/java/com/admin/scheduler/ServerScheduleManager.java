@@ -1,8 +1,6 @@
 package com.admin.scheduler;
 
 import com.admin.service.ScheduleService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -23,7 +21,7 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
 
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         // 心跳检测
         addThread("Heartbeat", ScheduleService.RUNNING_INTERVAL, scheduleService::heartbeat);
 
@@ -50,18 +48,15 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
         threadContainer.add(thread);
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class SafeLoopRunnable implements Runnable {
-        private final Runnable task;
-        private final Long runningInterval;
-
-
+    public record SafeLoopRunnable(Runnable task, Long runningInterval) implements Runnable {
         @Override
         public void run() {
+            boolean isFirst = true;
             while (true) {
                 try {
-                    Thread.sleep(runningInterval);
+                    if (!isFirst) {
+                        Thread.sleep(runningInterval);
+                    }
                     long start = System.currentTimeMillis();
                     task.run();
                     long cost = System.currentTimeMillis() - start;
@@ -76,6 +71,7 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
                     log.error("[{}] task has exception: {}", Thread.currentThread().getName(), e.getMessage(), e);
                     break;
                 }
+                isFirst = false;
             }
         }
     }

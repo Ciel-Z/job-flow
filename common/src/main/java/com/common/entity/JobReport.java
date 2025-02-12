@@ -48,6 +48,21 @@ public class JobReport implements Serializable {
     private String workerAddress;
 
     /**
+     * 工作流实例 ID
+     */
+    private Long flowInstanceId;
+
+    /**
+     * 工作流节点 ID
+     */
+    private Long flowNodeId;
+
+    /**
+     * 工作流版本
+     */
+    private Integer jobFlowVersion;
+
+    /**
      * 时间戳
      */
     private LocalDateTime timestamp = LocalDateTime.now();
@@ -71,6 +86,9 @@ public class JobReport implements Serializable {
         this.id = instance.getId();
         this.instanceId = instance.getInstanceId();
         this.jobName = instance.getJobName();
+        this.flowInstanceId = instance.getFlowInstanceId();
+        this.flowNodeId = instance.getFlowNodeId();
+        this.jobFlowVersion = instance.getJobFlowVersion();
         return this;
     }
 

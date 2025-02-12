@@ -2,8 +2,10 @@ package com.admin.service;
 
 
 import com.admin.entity.TableInfo;
+import com.admin.vo.JobInstanceVO;
 import com.admin.vo.JobRequestVO;
 import com.common.entity.JobInfo;
+import com.common.entity.JobInstance;
 
 public interface JobService {
 
@@ -16,4 +18,6 @@ public interface JobService {
     JobInfo detail(Long jobId);
 
     void toggle(Long jobId);
+
+    TableInfo<JobInstance> instanceList(JobInstanceVO requestVO);
 }

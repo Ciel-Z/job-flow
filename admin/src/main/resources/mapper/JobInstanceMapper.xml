@@ -10,8 +10,8 @@
             <result property="jobName" column="job_name" />
             <result property="instanceId" column="instance_id" />
             <result property="flowInstanceId" column="flow_instance_id" />
+            <result property="flowNodeId" column="flow_node_id" />
             <result property="dispatchStrategy" column="dispatch_strategy" />
-            <result property="extra" column="extra" />
             <result property="tag" column="tag" />
             <result property="processorInfo" column="processor_info" />
             <result property="params" column="params" />
@@ -26,8 +26,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,job_id,job_name,instance_id,flow_instance_id,dispatch_strategy,
-        extra,tag,processor_info,params,worker_address,
+        id,job_id,job_name,instance_id,flow_instance_id,flow_node_id,dispatch_strategy,
+        tag,processor_info,params,worker_address,
         trigger_time,reply_time,end_time,result,status,
         created_date,updated_date
     </sql>
@@ -39,18 +39,35 @@
         where  id = #{id} 
     </select>
 
+    <select id="selectPageByCondition" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List" />
+        from t_job_instance
+        <where>
+            <if test="instanceId != null">
+                and instance_id = #{instanceId}
+            </if>
+            <if test="jobId != null">
+                and job_id = #{jobId}
+            </if>
+            <if test="jobName != null and jobName != ''">
+                and job_name like concat('%',#{jobName},'%')
+            </if>
+        </where>
+    </select>
+
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from t_job_instance
         where  id = #{id} 
     </delete>
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.common.entity.JobInstance" useGeneratedKeys="true">
         insert into t_job_instance
-        ( id,job_id,job_name,instance_id,flow_instance_id,dispatch_strategy,
-        extra,tag,processor_info,params,worker_address,
+        ( id,job_id,job_name,instance_id,flow_instance_id,flow_node_id,dispatch_strategy,
+        tag,processor_info,params,worker_address,
         trigger_time,reply_time,end_time,result,status,
         created_date,updated_date)
-        values (#{id},#{jobId},#{jobName},#{instanceId},#{flowInstanceId},#{dispatchStrategy},
-        #{extra},#{tag},#{processorInfo},#{params},#{workerAddress},
+        values (#{id},#{jobId},#{jobName},#{instanceId},#{flowInstanceId},#{flowNodeId},#{dispatchStrategy},
+        #{tag},#{processorInfo},#{params},#{workerAddress},
         #{triggerTime},#{replyTime},#{endTime},#{result},#{status},
         #{createdDate},#{updatedDate})
     </insert>
@@ -62,8 +79,8 @@
                 <if test="jobName != null">job_name,</if>
                 <if test="instanceId != null">instance_id,</if>
                 <if test="flowInstanceId != null">flow_instance_id,</if>
+                <if test="flowNodeId != null">flow_node_id,</if>
                 <if test="dispatchStrategy != null">dispatch_strategy,</if>
-                <if test="extra != null">extra,</if>
                 <if test="tag != null">tag,</if>
                 <if test="processorInfo != null">processor_info,</if>
                 <if test="params != null">params,</if>
@@ -82,8 +99,8 @@
                 <if test="jobName != null">#{jobName},</if>
                 <if test="instanceId != null">#{instanceId},</if>
                 <if test="flowInstanceId != null">#{flowInstanceId},</if>
+                <if test="flowNodeId != null">#{flowNodeId},</if>
                 <if test="dispatchStrategy != null">#{dispatchStrategy},</if>
-                <if test="extra != null">#{extra},</if>
                 <if test="tag != null">#{tag},</if>
                 <if test="processorInfo != null">#{processorInfo},</if>
                 <if test="params != null">#{params},</if>
@@ -112,11 +129,11 @@
                 <if test="flowInstanceId != null">
                     flow_instance_id = #{flowInstanceId},
                 </if>
+                <if test="flowNodeId != null">
+                    flow_node_id = #{flowNodeId},
+                </if>
                 <if test="dispatchStrategy != null">
                     dispatch_strategy = #{dispatchStrategy},
-                </if>
-                <if test="extra != null">
-                    extra = #{extra},
                 </if>
                 <if test="tag != null">
                     tag = #{tag},
@@ -161,8 +178,8 @@
             job_name =  #{jobName},
             instance_id =  #{instanceId},
             flow_instance_id =  #{flowInstanceId},
+            flow_node_id =  #{flowNodeId},
             dispatch_strategy =  #{dispatchStrategy},
-            extra =  #{extra},
             tag =  #{tag},
             processor_info =  #{processorInfo},
             params =  #{params},
@@ -192,12 +209,22 @@
         where id = #{id,jdbcType=BIGINT}
     </update>
 
-    <update id="updateRunningJobTimeOut">
+    <update id="updateTimeoutByIds">
         update t_job_instance
         set status = 2,
             result = 'TIMEOUT',
             end_time =  now(),
             updated_date = now()
-        where status = 1 and reply_time <![CDATA[<]]> #{timestamp,jdbcType=TIMESTAMP}
+        where
+            id in
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
     </update>
+
+    <select id="selectRunningJobTimeout">
+        select id, flow_instance_id, flow_node_id
+        from t_job_instance
+        where status = 1 and reply_time <![CDATA[<]]> #{timestamp,jdbcType=TIMESTAMP}
+    </select>
 </mapper>

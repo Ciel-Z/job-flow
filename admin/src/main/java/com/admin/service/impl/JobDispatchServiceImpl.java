@@ -1,17 +1,21 @@
 package com.admin.service.impl;
 
+import com.admin.entity.TableInfo;
+import com.admin.mapper.JobFlowInstanceMapper;
 import com.admin.mapper.JobInfoMapper;
 import com.admin.mapper.JobInstanceMapper;
+import com.admin.mapper.JobLogMapper;
 import com.admin.service.JobDispatchService;
 import com.admin.verticle.MessageDispatcher;
 import com.admin.vo.JobInstanceVO;
 import com.common.constant.Constant;
-import com.common.entity.JobInfo;
-import com.common.entity.JobInstance;
-import com.common.entity.JobReport;
+import com.common.dag.JobFlowDAG;
+import com.common.dag.NodeEdgeDAG;
+import com.common.entity.*;
 import com.common.enums.JobStatusEnum;
 import com.common.util.AssertUtils;
 import com.common.util.PathUtil;
+import com.github.pagehelper.Page;
 import com.hazelcast.core.HazelcastInstance;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
@@ -29,13 +33,17 @@ public class JobDispatchServiceImpl implements JobDispatchService {
 
     private final Vertx vertx;
 
+    private final HazelcastInstance hazelcast;
+
     private final JobInfoMapper jobMapper;
+
+    private final JobLogMapper jobLogMapper;
 
     private final JobInstanceMapper jobInstanceMapper;
 
-    private final HazelcastInstance hazelcast;
-
     private final MessageDispatcher messageDispatcher;
+
+    private final JobFlowInstanceMapper jobFlowInstanceMapper;
 
     @Override
     public void start(Long jobId, String instanceParams, long delayMS) {
@@ -47,12 +55,13 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         // 符合启动条件, 异步启动任务
         vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
             log.info("start job jobId: {}, instanceId: {}", instance.getJobId(), instance.getInstanceId());
-            doStart(instance);
+            start(instance);
         });
     }
 
 
-    public void doStart(JobInstance instance) {
+    @Override
+    public void start(JobInstance instance) {
         instance.setStatus(JobStatusEnum.DISPATCH.getCode());
         JobInfo jobInfo = instance.getJobInfo();
         jobInstanceMapper.insert(instance);
@@ -68,10 +77,11 @@ public class JobDispatchServiceImpl implements JobDispatchService {
                     vertx.setTimer(Math.max(1, jobInfo.getRetryInterval()), id -> {
                         JobInstance nextInstance = instance.clone();
                         nextInstance.setCurrentRetryTimes(instance.getCurrentRetryTimes() + 1);
-                        doStart(nextInstance);
+                        start(nextInstance);
                     });
                 }
             }
+            jobFlowStatusProcess(instance);
             jobInstanceMapper.updateByPrimaryKey(instance);
         });
     }
@@ -87,23 +97,67 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         jobInstance.setResult("强制终止");
         jobInstanceMapper.updateByPrimaryKey(jobInstance);
 
-        // 修改任务实例全局状态 | 任务监控线程上报状态前会检查此状态, 非运行状态时会停止任务线程
-        hazelcast.getMap(Constant.STATE_MACHINE).put(jobInstance.getId(), JobStatusEnum.FAIL.getCode());
+        // 修改任务实例全局状态 | 任务监控线程上报状态检查此状态, 非运行状态时会停止任务线程
+        hazelcast.getMap(Constant.JOB_TERMINATION).put(jobInstance.getId(), true);
 
         // 发送停止任务消息, 通知执行器停止任务
         messageDispatcher.dispatcher(PathUtil.getGlobalPath(jobInstance.getWorkerAddress(), Constant.STOP_JOB)).send(jobInstance);
+
+        // 更新任务实例全局状态
+        jobFlowStatusProcess(jobInstance);
     }
 
 
-    private JobInstance instance(JobInfo jobInfo, String instanceParams) {
+    @Override
+    public TableInfo<JobLog> log(Long instanceId) {
+        Page<JobLog> page = jobLogMapper.selectPageByInstanceId(instanceId);
+        return TableInfo.of(page.getTotal(), page.getResult());
+    }
+
+
+    @Override
+    public JobInstance instance(JobInfo jobInfo, String instanceParams) {
+        return instance(jobInfo, instanceParams, null, null);
+    }
+
+
+    @Override
+    public JobInstance instance(JobInfo jobInfo, String instanceParams, Long flowInstanceId, Long flowNodeId) {
         JobInstance jobInstance = new JobInstance();
         BeanUtils.copyProperties(jobInfo, jobInstance);
         jobInstance.setTriggerTime(LocalDateTime.now());
-        long instanceId = hazelcast.getFlakeIdGenerator("JobInstanceId").newId();
-        jobInstance.setInstanceId(instanceId);
+        jobInstance.setReplyTime(jobInstance.getTriggerTime());
+        jobInstance.setInstanceId(hazelcast.getFlakeIdGenerator("JobInstanceId").newId());
         jobInstance.setParams(Optional.ofNullable(instanceParams).orElse(jobInfo.getParams()));
         jobInstance.setJobInfo(jobInfo);
-        jobInstance.setCurrentRetryTimes(1L);
+        jobInstance.setFlowInstanceId(flowInstanceId);
+        jobInstance.setFlowNodeId(flowNodeId);
+        // 设置重试次数 (任务流触发时, 暂不自动重试)
+        jobInstance.setCurrentRetryTimes(flowInstanceId != null && flowNodeId != null ? jobInfo.getMaxRetryTimes() : 1L);
         return jobInstance;
+    }
+
+
+    /**
+     * 任务流实例状态处理 | 1.worker 任务响应 2.强制停止
+     *
+     * @param instance 任务实例
+     */
+    private void jobFlowStatusProcess(JobInstance instance) {
+        if (instance.getFlowInstanceId() == null || instance.getFlowNodeId() == null) {
+            return;
+        }
+        // 任务实例所属于任务流
+        JobFlowInstance flowInstance = jobFlowInstanceMapper.selectByPrimaryKey(instance.getFlowInstanceId());
+        JobFlowDAG dag = flowInstance.getJobFlowDAG();
+        NodeEdgeDAG.Node node = dag.getNodeMap().get(instance.getFlowNodeId()).getNode();
+        BeanUtils.copyProperties(instance, node);
+        flowInstance.setJobFlowDAG(dag);
+        flowInstance.setStatus(instance.getStatus());
+        if (instance.getEndTime() != null && flowInstance.getEndTime() == null) {
+            flowInstance.setEndTime(instance.getEndTime());
+            flowInstance.setResult(node.errorMassage());
+        }
+        jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
     }
 }

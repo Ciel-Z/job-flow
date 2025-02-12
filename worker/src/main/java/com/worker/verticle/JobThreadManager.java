@@ -6,6 +6,7 @@ import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
 import com.common.entity.NodeInfo;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hazelcast.core.HazelcastInstance;
 import com.worker.config.WorkerConfigure;
 import io.vertx.core.Vertx;
 import jakarta.annotation.PreDestroy;
@@ -27,6 +28,8 @@ import java.util.function.Supplier;
 public class JobThreadManager implements InitializingBean {
 
     private final Vertx vertx;
+
+    private final HazelcastInstance hazelcast;
 
     private final WorkerConfigure configure;
 
@@ -68,7 +71,7 @@ public class JobThreadManager implements InitializingBean {
         jobFuture.whenComplete(callback);
 
         // 监控任务执行状态
-        ScheduledFuture<?> monitorFuture = monitorExecutor.scheduleAtFixedRate(() -> statusReport(instance, jobFuture), 5, 15, TimeUnit.SECONDS);
+        ScheduledFuture<?> monitorFuture = monitorExecutor.scheduleAtFixedRate(() -> statusReport(instance), 5, 15, TimeUnit.SECONDS);
         jobMap.put(instance.getId(), JobThreadHolder.of(jobFuture, monitorFuture));
     }
 
@@ -81,24 +84,35 @@ public class JobThreadManager implements InitializingBean {
 
 
     public boolean isJobRunning(JobInstance instance) {
-        return jobMap.containsKey(instance.getId());
+        // 任务被终止
+        if (hazelcast.getMap(Constant.JOB_TERMINATION).containsKey(instance.getId())) {
+            return false;
+        }
+        // 任务结束或被终止
+        if (!jobMap.containsKey(instance.getId())) {
+            return false;
+        }
+        // 非工作流任务
+        if (instance.getFlowInstanceId() == null || instance.getJobFlowVersion() == null) {
+            return true;
+        }
+        // 工作流实例终止状态
+        String key = String.format("%d_%d", instance.getFlowInstanceId(), instance.getJobFlowVersion());
+        return !hazelcast.getMap(Constant.JOB_FLOW_TERMINATION).containsKey(key);
     }
 
 
-    private void statusReport(JobInstance instance, Future<JobReport> jobFuture) {
+    private void statusReport(JobInstance instance) {
         log.info("task-monitor id = {}", instance.getInstanceId());
         JobReport report;
         if (isJobRunning(instance)) {
             report = JobReport.running("任务执行中");
-        } else if (jobFuture.isCancelled()) {
-            report = JobReport.fail("任务被取消");
-        } else { // job done
-            return;
+            String jsonString = JSON.toJSONString(report.workerAddress(nodeInfo.getServerAddress()).jobInstance(instance));
+            vertx.eventBus().send(Constant.DISPATCH_REPORT, jsonString);
+        } else {
+            stopJob(instance);
         }
-        String jsonString = JSON.toJSONString(report.workerAddress(nodeInfo.getServerAddress()).jobInstance(instance));
-        vertx.eventBus().send(Constant.DISPATCH_REPORT, jsonString);
     }
-
 
 
     @Data

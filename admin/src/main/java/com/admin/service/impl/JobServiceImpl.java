@@ -5,8 +5,10 @@ import com.admin.mapper.JobInfoMapper;
 import com.admin.mapper.JobInstanceMapper;
 import com.admin.service.JobService;
 import com.admin.util.CronUtil;
+import com.admin.vo.JobInstanceVO;
 import com.admin.vo.JobRequestVO;
 import com.common.entity.JobInfo;
+import com.common.entity.JobInstance;
 import com.github.pagehelper.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,11 @@ public class JobServiceImpl implements JobService {
         JobInfo jobInfo = jobMapper.selectByPrimaryKey(jobId);
         jobInfo.setStatus(jobInfo.getStatus() == null || jobInfo.getStatus() == 0 ? 1 : 0);
         jobMapper.updateByPrimaryKeySelective(jobInfo);
+    }
+
+    @Override
+    public TableInfo<JobInstance> instanceList(JobInstanceVO requestVO) {
+        return jobInstanceMapper.selectPageByCondition(requestVO);
     }
 
     private void fullDefault(JobInfo jobInfo) {

@@ -2,6 +2,7 @@ package com.admin.mapper;
 
 import com.common.entity.JobLog;
 import com.common.entity.JobLogReport;
+import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -25,4 +26,6 @@ public interface JobLogMapper {
     int updateByPrimaryKey(JobLog record);
 
     void batchInsert(@Param("jobLogReport") JobLogReport jobLogReport);
+
+    Page<JobLog> selectPageByInstanceId(Long instanceId);
 }

@@ -2,7 +2,6 @@ package com.worker.logger;
 
 import com.common.entity.JobInstance;
 import com.common.enums.LogLevel;
-import com.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

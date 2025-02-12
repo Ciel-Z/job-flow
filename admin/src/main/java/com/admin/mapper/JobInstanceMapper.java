@@ -1,11 +1,14 @@
 package com.admin.mapper;
 
+import com.admin.entity.TableInfo;
+import com.admin.vo.JobInstanceVO;
 import com.common.entity.JobInstance;
 import com.common.entity.JobReport;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author zuobin
@@ -27,15 +30,24 @@ public interface JobInstanceMapper {
 
     int updateByPrimaryKey(JobInstance record);
 
+    TableInfo<JobInstance> selectPageByCondition(JobInstanceVO requestVO);
+
     @Delete("delete from t_job_instance where job_id = #{jobId}")
     void deleteByJobId(Long jobId);
 
     void updateByEvent(JobReport jobReport);
 
     /**
-     * 更新任务执行超时 | 心跳超时终止
+     * 查询超时的实例
      *
      * @param timestamp 时间戳
      */
-    void updateRunningJobTimeOut(@Param("timestamp") LocalDateTime timestamp);
+    List<JobInstance> selectRunningJobTimeout(@Param("timestamp") LocalDateTime timestamp);
+
+    /**
+     * 更新超时实例
+     *
+     * @param ids 实例ID
+     */
+    void updateTimeoutByIds(@Param("ids") List<Long> ids);
 }

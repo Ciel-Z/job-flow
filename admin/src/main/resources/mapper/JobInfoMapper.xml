@@ -162,6 +162,15 @@
         </foreach>
     </update>
 
+    <select id="selectIdByIds">
+        select job_id
+        from t_job_info
+        where job_id in
+        <foreach collection="jobIds" item="jobId" separator="," open="(" close=")">
+            #{jobId}
+        </foreach>
+    </select>
+
     <select id="selectPage" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -170,16 +179,16 @@
             <if test="jobId != null">
                 and job_id = #{jobId,jdbcType=BIGINT}
             </if>
-            <if test="jobName != null">
+            <if test="jobName != null and jobName != ''">
                 and job_name like concat('%',#{jobName,jdbcType=VARCHAR},'%')
             </if>
-            <if test="cron != null">
+            <if test="cron != null and cron != ''">
                 and cron = #{cron,jdbcType=VARCHAR}
             </if>
-            <if test="tag != null">
+            <if test="tag != null and tag != ''">
                 and tag = #{tag,jdbcType=VARCHAR}
             </if>
-            <if test="processorInfo != null">
+            <if test="processorInfo != null and processorInfo != ''">
                 and processor_info like concat('%',#{processorInfo,jdbcType=VARCHAR},'%')
             </if>
         </where>
@@ -197,5 +206,6 @@
         from t_job_info
         where server_ip = #{serverAddress}
         and next_trigger_time <![CDATA[<=]]> #{timestamp}
+        and status = 1
     </select>
 </mapper>

@@ -1,8 +1,6 @@
 package com.worker.config;
 
 import com.worker.service.ScheduleService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -23,7 +21,7 @@ public class WorkerScheduleManager implements InitializingBean, DisposableBean {
 
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         // 心跳检查
         addThread("heartbeat", ScheduleService.RUNNING_INTERVAL, scheduleService::heartbeat);
 
@@ -43,13 +41,8 @@ public class WorkerScheduleManager implements InitializingBean, DisposableBean {
         threadContainer.add(thread);
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class SafeLoopRunnable implements Runnable {
-        private final Runnable task;
-        private final Long runningInterval;
 
-
+    public record SafeLoopRunnable(Runnable task, Long runningInterval) implements Runnable {
         @Override
         public void run() {
             boolean isFirst = true;

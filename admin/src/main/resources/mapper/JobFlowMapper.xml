@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.admin.mapper.JobFlowMapper">
+
+    <resultMap id="BaseResultMap" type="com.common.entity.JobFlow">
+            <id property="flowId" column="flow_id" />
+            <result property="name" column="name" />
+            <result property="dag" column="dag" />
+            <result property="params" column="params" />
+            <result property="createdDate" column="created_date" />
+            <result property="updatedDate" column="updated_date" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        flow_id,name,dag,params,created_date,updated_date
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_job_flow
+        where  flow_id = #{flowId} 
+    </select>
+
+    <select id="selectPageByCondition" resultMap="BaseResultMap">
+        select
+            flow_id,name,params,created_date,updated_date
+        from t_job_flow
+        <where>
+            <if test="flowId != null">
+                and flow_id = #{flowId}
+            </if>
+            <if test="name != null and name != ''">
+                and name like concat('%',#{name},'%')
+            </if>
+        </where>
+        order by flow_id desc
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from t_job_flow
+        where  flow_id = #{flowId} 
+    </delete>
+    <insert id="insert" keyColumn="flow_id" keyProperty="flowId" parameterType="com.common.entity.JobFlow" useGeneratedKeys="true">
+        insert into t_job_flow
+        ( flow_id,name,dag,params)
+        values (#{flowId},#{name},#{dag},#{params})
+    </insert>
+
+    <insert id="insertSelective" keyColumn="flow_id" keyProperty="flowId" parameterType="com.common.entity.JobFlow" useGeneratedKeys="true">
+        insert into t_job_flow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="flowId != null">flow_id,</if>
+                <if test="name != null">name,</if>
+                <if test="dag != null">dag,</if>
+                <if test="params != null">params,</if>
+                <if test="createdDate != null">created_date,</if>
+                <if test="updatedDate != null">updated_date,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="flowId != null">#{flowId},</if>
+                <if test="name != null">#{name},</if>
+                <if test="dag != null">#{dag},</if>
+                <if test="params != null">#{params},</if>
+                <if test="createdDate != null">#{createdDate},</if>
+                <if test="updatedDate != null">#{updatedDate},</if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.common.entity.JobFlow">
+        update t_job_flow
+        <set>
+                <if test="name != null">
+                    name = #{name},
+                </if>
+                <if test="dag != null">
+                    dag = #{dag},
+                </if>
+                <if test="params != null">
+                    params = #{params},
+                </if>
+                updated_date = now()
+        </set>
+        where   flow_id = #{flowId} 
+    </update>
+
+    <update id="updateByPrimaryKey" parameterType="com.common.entity.JobFlow">
+        update t_job_flow
+        set 
+            name =  #{name},
+            dag =  #{dag},
+            params =  #{params},
+            updated_date = now()
+        where   flow_id = #{flowId} 
+    </update>
+</mapper>
