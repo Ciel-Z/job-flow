@@ -6,6 +6,9 @@ import com.common.constant.Constant;
 import com.common.dag.NodeEdgeDAG;
 import com.common.entity.JobFlowInstance;
 import com.common.util.DAGUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +43,7 @@ public class WebSocketJobHandler extends TextWebSocketHandler implements Initial
     public void afterPropertiesSet() {
         hazelcast.getTopic(Constant.JOB_FLOW_EVENT).addMessageListener(message -> {
             try {
-                JobFlowInstance instance = JSON.parseObject(message.getMessageObject().toString(), JobFlowInstance.class);
+                JobFlowInstance instance = json2Instance(message.getMessageObject().toString());
                 if (instance != null) {
                     log.info("WebSocketJobHandler job_flow_event instance = {} version = {}, status = {}", instance.getName(), instance.getVersion(), instance.getStatus());
                     sendMessageToClient(instance.getId(), instance);
@@ -87,6 +90,16 @@ public class WebSocketJobHandler extends TextWebSocketHandler implements Initial
             NodeEdgeDAG nodeEdgeDAG = DAGUtil.fromJSONString(instance.getDag());
             Message message = new Message().setWorkflowInstanceId(instance.getId()).setType("event").setStatus(instance.getStatus()).setDag(nodeEdgeDAG);
             session.sendMessage(new TextMessage(JSON.toJSONString(message)));
+        }
+    }
+
+
+    private static JobFlowInstance json2Instance(String json) {
+        try {
+            return new ObjectMapper().registerModule(new JavaTimeModule()).readValue(json, JobFlowInstance.class);
+        } catch (JsonProcessingException e) {
+            log.info("Failed to serialize JobFlowInstance to JSON", e);
+            return null;
         }
     }
 

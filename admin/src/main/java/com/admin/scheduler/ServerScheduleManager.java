@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-@Lazy
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ServerScheduleManager implements InitializingBean, DisposableBean {
 
+    @Lazy
     private final ScheduleService scheduleService;
 
     private final List<Thread> threadContainer = new ArrayList<>();
@@ -53,8 +53,10 @@ public class ServerScheduleManager implements InitializingBean, DisposableBean {
     public record SafeLoopRunnable(Runnable task, Long runningInterval) implements Runnable {
         @Override
         public void run() {
+            boolean isFirst = true;
             while (true) {
                 try {
+                    Thread.sleep(runningInterval);
                     long start = System.currentTimeMillis();
                     task.run();
                     long cost = System.currentTimeMillis() - start;

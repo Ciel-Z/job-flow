@@ -4,7 +4,6 @@ import com.admin.mapper.JobFlowInstanceMapper;
 import com.admin.mapper.JobInfoMapper;
 import com.admin.mapper.JobInstanceMapper;
 import com.admin.util.CronUtil;
-import com.alibaba.fastjson2.JSON;
 import com.common.config.VertxConfiguration;
 import com.common.constant.Constant;
 import com.common.dag.JobFlowDAG;
@@ -14,6 +13,9 @@ import com.common.enums.JobStatusEnum;
 import com.common.enums.LockEnum;
 import com.common.lock.GlobalLock;
 import com.common.vertx.AbstractEventVerticle;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
@@ -185,10 +187,11 @@ public class ScheduleService implements InitializingBean {
                 flowInstance.setResult("任务心跳超时导致失败");
                 jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
                 // 发布工作流实例更新事件
-//                hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publish(JSON.toJSONString(flowInstance));
+                hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publishAsync(instance2Json(flowInstance));
             }
         }
     }
+
 
     private void register(List<String> addresslist) {
         for (String address : addresslist) {
@@ -206,4 +209,12 @@ public class ScheduleService implements InitializingBean {
         return Duration.between(nodeInfo.getTimestamp(), LocalDateTime.now()).getSeconds() > vertxConfiguration.getTimeout();
     }
 
+    private static String instance2Json(JobFlowInstance flowInstance) {
+        try {
+            return new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(flowInstance);
+        } catch (JsonProcessingException e) {
+            log.info("Failed to serialize JobFlowInstance to JSON", e);
+            return "";
+        }
+    }
 }

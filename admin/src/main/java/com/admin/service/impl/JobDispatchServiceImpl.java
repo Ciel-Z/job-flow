@@ -15,6 +15,9 @@ import com.common.entity.*;
 import com.common.enums.JobStatusEnum;
 import com.common.util.AssertUtils;
 import com.common.util.PathUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.pagehelper.Page;
 import com.hazelcast.core.HazelcastInstance;
 import io.vertx.core.Vertx;
@@ -160,6 +163,15 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         }
         jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
         // 发送任务流实例状态更新消息
-//        hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publish(JSON.toJSONString(flowInstance));
+        hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publishAsync(instance2Json(flowInstance));
+    }
+
+    private static String instance2Json(JobFlowInstance flowInstance) {
+        try {
+            return new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(flowInstance);
+        } catch (JsonProcessingException e) {
+            log.info("Failed to serialize JobFlowInstance to JSON", e);
+            return "";
+        }
     }
 }

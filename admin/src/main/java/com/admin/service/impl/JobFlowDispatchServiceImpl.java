@@ -9,13 +9,15 @@ import com.alibaba.fastjson2.JSON;
 import com.common.constant.Constant;
 import com.common.dag.JobFlowDAG;
 import com.common.dag.NodeEdgeDAG;
-import com.common.entity.JobFlow;
-import com.common.entity.JobFlowInstance;
-import com.common.entity.JobInfo;
-import com.common.entity.JobInstance;
+import com.common.entity.*;
 import com.common.enums.JobStatusEnum;
+import com.common.enums.LockEnum;
+import com.common.lock.GlobalLock;
 import com.common.util.AssertUtils;
 import com.common.util.DAGUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.Sets;
 import com.hazelcast.core.HazelcastInstance;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,9 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
     private final JobDispatchService jobDispatchService;
 
     private final JobFlowInstanceMapper jobFlowInstanceMapper;
+
+    private static final Set<Integer> STOPPED_STATUSES = Set.of(JobStatusEnum.FAIL.getCode(), JobStatusEnum.PAUSE.getCode());
+
 
     @Override
     public Long start(Long jobFlowId) {
@@ -156,6 +162,80 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
         jobInstance.setJobFlowVersion(instance.getVersion());
         jobDispatchService.start(jobInstance);
         log.info("StartJobFlowNode flowInstanceId: {}, node: {} jobId: {}", instance.getId(), node.getJobName(), node.getJobId());
+    }
+
+
+    @Override
+    @GlobalLock(type = LockEnum.LOCK, key = "#jobReport.flowNodeId", leaseTime = 10000)
+    public void processJobFlowEvent(JobReport jobReport) {
+        // 工作流实例被删除 || 工作流版本已过时 (防止出现因重试导致的调度混乱)
+        JobFlowInstance flowInstance = jobFlowInstanceMapper.selectByPrimaryKey(jobReport.getFlowInstanceId());
+        if (flowInstance == null || flowInstance.getVersion() > jobReport.getJobFlowVersion()) {
+            return;
+        }
+
+        // 更新当前节点信息
+        NodeEdgeDAG nodeEdgeDAG = flowInstance.getNodeEdgeDAG();
+        JobFlowDAG dag = DAGUtil.convert(nodeEdgeDAG);
+        NodeEdgeDAG.Node edgeNode = dag.getNode(jobReport.getFlowNodeId()).getNode();
+        BeanUtils.copyProperties(jobReport, edgeNode);
+        edgeNode.setEndTime(jobReport.getTimestamp());
+
+        // 工作流实例已停止仅更新此节点信息 | 可能情况 1.其他节点已报错 2.页面触发强制停止
+        if (STOPPED_STATUSES.contains(flowInstance.getStatus())) {
+            updateInstance(nodeEdgeDAG, flowInstance);
+            return;
+        }
+
+        // 失败或暂停, 更新工作流状态
+        if (STOPPED_STATUSES.contains(jobReport.getStatus())) {
+            flowInstance.setStatus(jobReport.getStatus());
+            flowInstance.setEndTime(jobReport.getTimestamp());
+            flowInstance.setResult(String.format("[%d %s] 任务出现问题", edgeNode.getNodeId(), edgeNode.getNodeName()));
+            updateInstance(nodeEdgeDAG, flowInstance);
+            return;
+        }
+
+        // 工作流完成
+        if (DAGUtil.areAllTasksCompleted(dag)) {
+            flowInstance.setStatus(JobStatusEnum.SUCCESS.getCode());
+            flowInstance.setEndTime(jobReport.getTimestamp());
+            flowInstance.setResult("工作流全部任务执行成功");
+            updateInstance(nodeEdgeDAG, flowInstance);
+            return;
+        }
+
+        // 获取就绪节点
+        List<NodeEdgeDAG.Node> readyNodes = DAGUtil.getReadyNodes(dag.getNodeMap(), jobReport.getFlowNodeId());
+        // 更新工作流实例
+        readyNodes.forEach(node -> {
+            node.setStartTime(LocalDateTime.now());
+            node.setStatus(JobStatusEnum.DISPATCH.getCode());
+        });
+        updateInstance(nodeEdgeDAG, flowInstance);
+
+        // 启动就绪任务
+        for (NodeEdgeDAG.Node readyNode : readyNodes) {
+            startJob(flowInstance, dag, readyNode.getNodeId());
+        }
+    }
+
+
+    private void updateInstance(NodeEdgeDAG dag, JobFlowInstance flowInstance) {
+        flowInstance.setDag(JSON.toJSONString(dag));
+        jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
+        // 发送任务流实例状态更新消息
+        hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publishAsync(instance2Json(flowInstance));
+    }
+
+
+    private static String instance2Json(JobFlowInstance flowInstance) {
+        try {
+            return new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(flowInstance);
+        } catch (JsonProcessingException e) {
+            log.info("Failed to serialize JobFlowInstance to JSON", e);
+            return "";
+        }
     }
 
 

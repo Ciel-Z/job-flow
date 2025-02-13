@@ -5,19 +5,20 @@ import com.hazelcast.map.IMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -31,12 +32,14 @@ public class GlobalLockAspect implements InitializingBean {
 
     private final HazelcastInstance hazelcast;
 
-    private static final ParameterNameDiscoverer PARAM_DISCOVERER = new DefaultParameterNameDiscoverer();
+    private static final DefaultParameterNameDiscoverer PARAM_DISCOVERER = new DefaultParameterNameDiscoverer();
 
-    private IMap<String, Long> lockMap;
+    private static final ExpressionParser PARSER = new SpelExpressionParser();
 
     // 检测锁续期线程池
     private final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
+
+    private IMap<String, Long> lockMap;
 
 
     @Override
@@ -74,10 +77,11 @@ public class GlobalLockAspect implements InitializingBean {
         } finally {
             renewalFuture.cancel(true);
             lockMap.remove(lockKey);
-            lockMap.unlock(globalLock.key());
+            lockMap.unlock(lockKey);  // 释放锁
             log.debug("{} 释放锁，lockKey: {}", point.getSignature().getDeclaringTypeName(), lockKey);
         }
     }
+
 
     private ScheduledFuture<?> getScheduledFuture(GlobalLock lock, String lockKey, long renewalInterval) {
         // 仅在仍为锁持有者时更新 TTL
@@ -99,12 +103,44 @@ public class GlobalLockAspect implements InitializingBean {
      * 解析 GlobalLock 注解上配置的 key 表达式，
      * 支持使用 SpEL 表达式，例如 "#id" 或 "#user.name"
      */
-    private String parseKey(ProceedingJoinPoint joinPoint, String keyExpression) {
-        ExpressionParser parser = new SpelExpressionParser();
-        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        EvaluationContext context = new MethodBasedEvaluationContext(joinPoint.getTarget(), methodSignature.getMethod(), joinPoint.getArgs(), PARAM_DISCOVERER);
-        Expression expression = parser.parseExpression(keyExpression);
-        Object value = expression.getValue(context);
-        return value != null ? value.toString() : keyExpression;
+    private String parseKey(ProceedingJoinPoint joinPoint, String spEl) {
+        Method method = parseMethod(joinPoint);
+        Object[] arguments = joinPoint.getArgs();
+        String[] params = PARAM_DISCOVERER.getParameterNames(method);
+
+        EvaluationContext context = new StandardEvaluationContext();
+        if (params != null) {
+            for (int len = 0; len < params.length; len++) {
+                context.setVariable(params[len], arguments[len]);
+            }
+        }
+        try {
+            Expression expression = PARSER.parseExpression(spEl);
+            return expression.getValue(context, String.class);
+        } catch (Exception e) {
+            log.error("解析 SpEL 失败", e);
+            throw e;
+        }
+    }
+
+
+    public static Method parseMethod(ProceedingJoinPoint joinPoint) {
+        Signature pointSignature = joinPoint.getSignature();
+        if (!(pointSignature instanceof MethodSignature)) {
+            throw new IllegalArgumentException("this annotation should be used on a method!");
+        }
+        MethodSignature signature = (MethodSignature) pointSignature;
+        Method method = signature.getMethod();
+        if (method.getDeclaringClass().isInterface()) {
+            try {
+                method = joinPoint.getTarget().getClass().getDeclaredMethod(pointSignature.getName(), method.getParameterTypes());
+            } catch (SecurityException | NoSuchMethodException e) {
+                log.error("解析方法失败", e);
+            }
+        }
+        return method;
     }
 }
+
+
+
