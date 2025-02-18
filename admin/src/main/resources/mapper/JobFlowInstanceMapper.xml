@@ -142,7 +142,7 @@
 
     <update id="updateVersionById">
         update t_job_flow_instance
-        set version = version + 1
+        set version = nullif(version, 0) + 1
         where id = #{id}
     </update>
 </mapper>

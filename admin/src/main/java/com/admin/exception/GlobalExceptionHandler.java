@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     /**
-     * 处理自定义的资源未找到异常
+     * 处理自定义异常
      */
     @ExceptionHandler(ServiceException.class)
-    public Result<String> handleResourceNotFoundException(ServiceException ex) {
-        log.error("ExceptionHandler e: ", ex);
-        return Result.error(-1, ex.getMessage());
+    public Result<String> handleResourceNotFoundException(ServiceException e) {
+        log.error("ExceptionHandler {}", e.getMessage(), e);
+        return Result.error(-1, e.getMessage());
     }
 }

@@ -5,6 +5,7 @@ import com.common.entity.JobFlowInstance;
 import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,9 @@ public interface JobFlowInstanceMapper {
     int updateByPrimaryKey(JobFlowInstance record);
 
     void updateVersionById(JobFlowInstance record);
+
+    @Select("select version from t_job_flow_instance where id = #{instanceId}")
+    Integer selectVersionById(Long instanceId);
 
     @Delete("delete from t_job_flow_instance where flow_id = #{jobFlowId}")
     void deleteByFlowId(Long jobFlowId);

@@ -146,6 +146,7 @@ public class JobFlowDispatchServiceImpl implements JobFlowDispatchService {
         jobFlowInstanceMapper.updateVersionById(instance);
 
         // 启动任务
+        instance = jobFlowInstanceMapper.selectByPrimaryKey(flowInstanceId);
         jobFlowEventService.startJob(instance, dag, nodeId, jobInfo);
     }
 
