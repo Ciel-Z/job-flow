@@ -187,7 +187,6 @@ public class DAGUtil {
     }
 
 
-
     public static NodeEdgeDAG fromJSONString(String jsonString) {
         return Optional.ofNullable(JSON.parseObject(jsonString, NodeEdgeDAG.class)).orElse(new NodeEdgeDAG());
     }
@@ -206,12 +205,16 @@ public class DAGUtil {
             if (node.getNode().getStatus() != null) {// 非空其他前驱节点已触发
                 continue;
             }
+            boolean allDependenciesMet = true;
             for (JobFlowDAG.Node dependency : node.getDependencies()) {
                 if (!JobStatusEnum.SUCCESS.getCode().equals(dependency.getNode().getStatus())) {
+                    allDependenciesMet = false;
                     break;
                 }
             }
-            readyNodes.add(node.getNode());
+            if (allDependenciesMet) {
+                readyNodes.add(node.getNode());
+            }
         }
         return readyNodes;
     }

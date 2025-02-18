@@ -86,6 +86,7 @@ public class JobReport implements Serializable {
         this.id = instance.getId();
         this.instanceId = instance.getInstanceId();
         this.jobName = instance.getJobName();
+        this.workerAddress = instance.getWorkerAddress();
         this.flowInstanceId = instance.getFlowInstanceId();
         this.flowNodeId = instance.getFlowNodeId();
         this.jobFlowVersion = instance.getJobFlowVersion();

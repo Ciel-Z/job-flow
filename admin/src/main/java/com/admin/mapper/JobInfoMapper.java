@@ -53,5 +53,5 @@ public interface JobInfoMapper {
      * @param jobIds 任务ID列表
      * @return int
      */
-    Set<Long> selectIdByIds(@Param("jobIds") Set<Long> jobIds);
+    List<JobInfo> selectByIds(@Param("jobIds") Set<Long> jobIds);
 }

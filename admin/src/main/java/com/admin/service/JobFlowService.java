@@ -4,6 +4,7 @@ import com.admin.entity.TableInfo;
 import com.admin.vo.JobFlowVO;
 import com.common.entity.JobFlow;
 import com.common.entity.JobFlowInstance;
+import com.common.entity.JobReport;
 
 public interface JobFlowService {
 
@@ -18,4 +19,5 @@ public interface JobFlowService {
     TableInfo<JobFlowInstance> instanceList(JobFlowVO jobFlowVO);
 
     JobFlowVO progress(Long flowInstanceId);
+
 }

@@ -13,8 +13,8 @@ public class DemoJobHandle implements JobHandler {
     @Override
     public JobReport handle(JobContext context) throws InterruptedException {
         // 模拟任务执行
-        Thread.sleep(60000);
-        context.getLogger().error("测试 log {}", 1, new RuntimeException("测试异常"));
+        Thread.sleep(30000);
+        context.getLogger().error("测试 log {}", "测试占位符", new RuntimeException("测试异常"));
         return JobReport.success("任务执行成功");
     }
 

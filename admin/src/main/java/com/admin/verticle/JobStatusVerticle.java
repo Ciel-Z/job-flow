@@ -1,35 +1,31 @@
 package com.admin.verticle;
 
-import com.admin.mapper.JobFlowInstanceMapper;
 import com.admin.mapper.JobInstanceMapper;
-import com.admin.service.JobFlowDispatchService;
+import com.admin.service.JobFlowEventService;
 import com.common.annotation.VerticlePath;
 import com.common.constant.Constant;
 import com.common.entity.JobEvent;
 import com.common.entity.JobReport;
 import com.common.enums.JobStatusEnum;
 import com.common.vertx.AbstractEventVerticle;
-import com.hazelcast.core.HazelcastInstance;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Callable;
 
+/**
+ * worker 上报任务状态处理
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 @VerticlePath(Constant.DISPATCH_REPORT)
 public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
 
-    private final HazelcastInstance hazelcast;
-
     private final JobInstanceMapper jobInstanceMapper;
 
-    private final JobFlowInstanceMapper jobFlowInstanceMapper;
-
-    private final JobFlowDispatchService jobFlowDispatchService;
-
+    private final JobFlowEventService jobFlowEventService;
 
 
     @Override
@@ -52,7 +48,7 @@ public class JobStatusVerticle extends AbstractEventVerticle<JobReport> {
 
         // 工作流所属任务
         if (jobReport.getFlowInstanceId() != null && jobReport.getFlowNodeId() != null && !JobStatusEnum.RUNNING.getCode().equals(jobReport.getStatus())) {
-            jobFlowDispatchService.processJobFlowEvent(jobReport);
+            jobFlowEventService.processJobFlowEvent(jobReport);
         }
     }
 }

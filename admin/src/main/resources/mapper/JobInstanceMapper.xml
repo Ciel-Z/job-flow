@@ -207,6 +207,7 @@
             </if>
         </set>
         where id = #{id,jdbcType=BIGINT}
+        and status in (0, 1)
     </update>
 
     <update id="updateTimeoutByIds">
@@ -222,7 +223,18 @@
             </foreach>
     </update>
 
-    <select id="selectRunningJobTimeout">
+    <update id="updateStopByFlowInstanceId">
+        update t_job_instance
+        set status = 2,
+            result = '强制停止',
+            end_time =  now(),
+            updated_date = now()
+        where
+            flow_instance_id = #{flowInstanceId}
+        and status in (0, 1)
+    </update>
+
+    <select id="selectRunningJobTimeout" resultMap="BaseResultMap">
         select id, flow_instance_id, flow_node_id
         from t_job_instance
         where status = 1 and reply_time <![CDATA[<]]> #{timestamp,jdbcType=TIMESTAMP}

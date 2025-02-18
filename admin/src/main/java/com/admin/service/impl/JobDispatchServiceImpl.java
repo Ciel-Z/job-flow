@@ -1,16 +1,14 @@
 package com.admin.service.impl;
 
 import com.admin.entity.TableInfo;
-import com.admin.mapper.JobFlowInstanceMapper;
 import com.admin.mapper.JobInfoMapper;
 import com.admin.mapper.JobInstanceMapper;
 import com.admin.mapper.JobLogMapper;
 import com.admin.service.JobDispatchService;
+import com.admin.service.JobFlowEventService;
 import com.admin.verticle.MessageDispatcher;
 import com.admin.vo.JobInstanceVO;
 import com.common.constant.Constant;
-import com.common.dag.JobFlowDAG;
-import com.common.dag.NodeEdgeDAG;
 import com.common.entity.*;
 import com.common.enums.JobStatusEnum;
 import com.common.util.AssertUtils;
@@ -44,9 +42,9 @@ public class JobDispatchServiceImpl implements JobDispatchService {
 
     private final JobInstanceMapper jobInstanceMapper;
 
-    private final MessageDispatcher messageDispatcher;
+    private final JobFlowEventService jobFlowEventService;
 
-    private final JobFlowInstanceMapper jobFlowInstanceMapper;
+    private final MessageDispatcher messageDispatcher;
 
     @Override
     public void start(Long jobId, String instanceParams, long delayMS) {
@@ -150,20 +148,9 @@ public class JobDispatchServiceImpl implements JobDispatchService {
         if (instance.getFlowInstanceId() == null || instance.getFlowNodeId() == null) {
             return;
         }
-        // 任务实例所属于任务流
-        JobFlowInstance flowInstance = jobFlowInstanceMapper.selectByPrimaryKey(instance.getFlowInstanceId());
-        JobFlowDAG dag = flowInstance.getJobFlowDAG();
-        NodeEdgeDAG.Node node = dag.getNode((instance.getFlowNodeId())).getNode();
-        BeanUtils.copyProperties(instance, node);
-        flowInstance.setJobFlowDAG(dag);
-        flowInstance.setStatus(instance.getStatus());
-        if (instance.getEndTime() != null && flowInstance.getEndTime() == null) {
-            flowInstance.setEndTime(instance.getEndTime());
-            flowInstance.setResult(node.errorMassage());
-        }
-        jobFlowInstanceMapper.updateByPrimaryKey(flowInstance);
-        // 发送任务流实例状态更新消息
-        hazelcast.getTopic(Constant.JOB_FLOW_EVENT).publishAsync(instance2Json(flowInstance));
+        JobReport jobReport = JobStatusEnum.RUNNING.getCode().equals(instance.getStatus()) ? JobReport.running("运行中") : JobReport.fail(instance.getResult());
+        jobReport.jobInstance(instance);
+        jobFlowEventService.processJobFlowEvent(jobReport);
     }
 
     private static String instance2Json(JobFlowInstance flowInstance) {

@@ -43,16 +43,17 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
     @Override
     public void process(JobEvent<JobInstance> event) {
         JobInstance instance = event.getBody();
+        instance.setWorkerAddress(localNode.getServerAddress());
         // 通知任务已开始
-        notifyBeginningJob(event, instance);
+        replyBeginning(event, instance);
         // 异步执行任务 & 绑定执行结果处理回调
         taskThreadManager.runJob(instance, () -> run(instance), (result, exception) -> {
             // 任务执行中被停止的情况
             if (!taskThreadManager.isJobRunning(instance)) {
-                log.warn("RunJobVerticle-warn 任务人为终止 {} {}", instance.getJobName(), instance.getJobId());
+                log.warn("RunJobVerticle-warn 任务被强制终止 {} {}", instance.getJobName(), instance.getJobId());
                 return;
             }
-            reply(result.jobInstance(instance));
+            replyResult(result, instance);
             taskThreadManager.stopJob(instance);
         });
         log.info("RunJobVerticle dispatched {} jobName = {}", instance.getProcessorInfo(), instance.getJobName());
@@ -73,30 +74,32 @@ public class RunJobVerticle extends AbstractEventVerticle<JobInstance> {
             JobContext jobContext = new JobContext();
             BeanUtils.copyProperties(instance, jobContext);
             jobContext.setLogger(new DefaultJobLogger(instance, loggerHandler));
-            jobContext.setWorkflowContext(hazelcast.getMap(String.format("job_flow_%d",instance.getFlowInstanceId())));
+            jobContext.setWorkflowContext(hazelcast.getMap(String.format("job_flow_%d", instance.getFlowInstanceId())));
 
             // 执行任务
-            JobReport handle = handler.handle(jobContext);
-            AssertUtils.isNotNull(handle, "{} 任务处理器返回结果为空", instance.getProcessorInfo());
-            log.info("RunJobVerticle [{}]-{} param = {} result = {}", instance.getJobName(), instance.getInstanceId(), instance.getParams(), handle.getResult());
-            return handle.workerAddress(localNode.getServerAddress()).jobInstance(instance);
+            JobReport report = handler.handle(jobContext);
+            AssertUtils.isNotNull(report, "{} 任务处理器返回结果为空", instance.getProcessorInfo());
+            log.info("RunJobVerticle [{}]-{} param = {} result = {}", instance.getJobName(), instance.getInstanceId(), instance.getParams(), report.getResult());
+            return report.jobInstance(instance);
         } catch (Exception e) {
             log.error("RunJobVerticle [{}]-{} param = {} error", instance.getJobName(), instance.getInstanceId(), instance.getParams(), e);
-            return JobReport.fail("执行失败", e).workerAddress(localNode.getServerAddress()).jobInstance(instance);
+            return JobReport.fail("执行失败", e).jobInstance(instance);
         }
     }
+
 
     /**
      * 通知任务已开始
      */
-    private void notifyBeginningJob(JobEvent<JobInstance> event, JobInstance instance) {
-        event.getMessage().reply(JSON.toJSONString(JobReport.running("开始执行").workerAddress(localNode.getServerAddress()).jobInstance(instance)));
+    private void replyBeginning(JobEvent<JobInstance> event, JobInstance instance) {
+        event.getMessage().reply(JSON.toJSONString(JobReport.running("开始执行").jobInstance(instance)));
     }
+
 
     /**
      * 回执执行结果
      */
-    private void reply(JobReport jobReport) {
-        vertx.eventBus().send(Constant.DISPATCH_REPORT, JSON.toJSONString(jobReport));
+    private void replyResult(JobReport jobReport, JobInstance instance) {
+        vertx.eventBus().send(Constant.DISPATCH_REPORT, JSON.toJSONString(jobReport.jobInstance(instance)));
     }
 }

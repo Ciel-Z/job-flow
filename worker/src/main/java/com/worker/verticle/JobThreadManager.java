@@ -33,13 +33,14 @@ public class JobThreadManager implements InitializingBean {
 
     private final WorkerConfigure configure;
 
-    private final NodeInfo nodeInfo;
+    private final NodeInfo localNode;
 
     private ExecutorService jobExecutor;
 
     private ScheduledExecutorService monitorExecutor;
 
     private Map<Long, JobThreadHolder<?>> jobMap;
+
 
     @Override
     public void afterPropertiesSet() {
@@ -72,6 +73,8 @@ public class JobThreadManager implements InitializingBean {
         // 监控任务执行状态
         ScheduledFuture<?> monitorFuture = monitorExecutor.scheduleAtFixedRate(() -> statusReport(instance), 5, 15, TimeUnit.SECONDS);
         jobMap.put(instance.getId(), JobThreadHolder.of(jobFuture, monitorFuture));
+
+        hazelcast.getPNCounter(String.format(Constant.WORKER_JOB_COUNTER, localNode.getIp())).incrementAndGet();
     }
 
 
@@ -79,6 +82,7 @@ public class JobThreadManager implements InitializingBean {
         JobThreadHolder<?> jobThreadHolder = jobMap.remove(instance.getId());
         Optional.ofNullable(jobThreadHolder.getJobfuture()).ifPresent(f -> f.cancel(true));
         Optional.ofNullable(jobThreadHolder.getMonitorFuture()).ifPresent(f -> f.cancel(true));
+        hazelcast.getPNCounter(String.format(Constant.WORKER_JOB_COUNTER, localNode.getIp())).decrementAndGet();
     }
 
 
@@ -106,7 +110,8 @@ public class JobThreadManager implements InitializingBean {
         JobReport report;
         if (isJobRunning(instance)) {
             report = JobReport.running("任务执行中");
-            String jsonString = JSON.toJSONString(report.workerAddress(nodeInfo.getServerAddress()).jobInstance(instance));
+            instance.setWorkerAddress(localNode.getServerAddress());
+            String jsonString = JSON.toJSONString(report.jobInstance(instance));
             vertx.eventBus().send(Constant.DISPATCH_REPORT, jsonString);
         } else {
             stopJob(instance);
@@ -128,5 +133,4 @@ public class JobThreadManager implements InitializingBean {
             return holder;
         }
     }
-
 }

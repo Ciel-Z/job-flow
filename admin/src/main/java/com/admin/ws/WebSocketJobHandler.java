@@ -45,7 +45,6 @@ public class WebSocketJobHandler extends TextWebSocketHandler implements Initial
             try {
                 JobFlowInstance instance = json2Instance(message.getMessageObject().toString());
                 if (instance != null) {
-                    log.info("WebSocketJobHandler job_flow_event instance = {} version = {}, status = {}", instance.getName(), instance.getVersion(), instance.getStatus());
                     sendMessageToClient(instance.getId(), instance);
                 }
             } catch (Exception e) {
@@ -87,6 +86,7 @@ public class WebSocketJobHandler extends TextWebSocketHandler implements Initial
     public void sendMessageToClient(Long workflowInstanceId, JobFlowInstance instance) throws Exception {
         CopyOnWriteArrayList<WebSocketSession> sessions = notifyMap.getOrDefault(workflowInstanceId, new CopyOnWriteArrayList<>());
         for (WebSocketSession session : sessions) {
+            log.info("WebSocketJobHandler job_flow_event instance = {} version = {}, status = {}", instance.getName(), instance.getVersion(), instance.getStatus());
             NodeEdgeDAG nodeEdgeDAG = DAGUtil.fromJSONString(instance.getDag());
             Message message = new Message().setWorkflowInstanceId(instance.getId()).setType("event").setStatus(instance.getStatus()).setDag(nodeEdgeDAG);
             session.sendMessage(new TextMessage(JSON.toJSONString(message)));

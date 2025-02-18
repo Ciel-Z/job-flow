@@ -55,6 +55,7 @@ public class GlobalLockAspect implements InitializingBean {
         log.debug("{} 尝试获取锁，lockKey: {}", point.getSignature().getDeclaringTypeName(), lockKey);
         // 重入
         if (holdThreadId != null && holdThreadId == Thread.currentThread().getId()) {
+            log.info("{} 重入锁，lockKey: {}", point.getSignature().getDeclaringTypeName(), lockKey);
             return point.proceed();
         }
         // 获取锁
@@ -103,22 +104,25 @@ public class GlobalLockAspect implements InitializingBean {
      * 解析 GlobalLock 注解上配置的 key 表达式，
      * 支持使用 SpEL 表达式，例如 "#id" 或 "#user.name"
      */
-    private String parseKey(ProceedingJoinPoint joinPoint, String spEl) {
+    private static String parseKey(ProceedingJoinPoint joinPoint, String spEl) {
+        if (!spEl.startsWith("#")) {
+            return spEl;
+        }
         Method method = parseMethod(joinPoint);
         Object[] arguments = joinPoint.getArgs();
         String[] params = PARAM_DISCOVERER.getParameterNames(method);
 
         EvaluationContext context = new StandardEvaluationContext();
         if (params != null) {
-            for (int len = 0; len < params.length; len++) {
-                context.setVariable(params[len], arguments[len]);
+            for (int i = 0; i < params.length; i++) {
+                context.setVariable(params[i], arguments[i]);
             }
         }
         try {
             Expression expression = PARSER.parseExpression(spEl);
             return expression.getValue(context, String.class);
         } catch (Exception e) {
-            log.error("解析 SpEL 失败", e);
+            log.error("解析 {} SpEL 失败", spEl, e);
             throw e;
         }
     }

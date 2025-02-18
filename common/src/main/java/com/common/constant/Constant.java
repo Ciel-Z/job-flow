@@ -43,6 +43,11 @@ public class Constant {
     public static final String STOP_JOB = "worker:stop:job";
 
     /**
+     * worker 任务计数器
+     */
+    public static final String WORKER_JOB_COUNTER = "worker_job_counter_%s";
+
+    /**
      * 任务实例终止标识
      */
     public static final String JOB_TERMINATION = "JobTermination";

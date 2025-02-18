@@ -208,4 +208,14 @@
         and next_trigger_time <![CDATA[<=]]> #{timestamp}
         and status = 1
     </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from t_job_info
+        where job_id in
+        <foreach collection="jobIds" item="jobId" separator="," open="(" close=")">
+            #{jobId}
+        </foreach>
+    </select>
 </mapper>

@@ -20,18 +20,30 @@ public class JobFlowController extends BaseController {
 
     private final JobFlowDispatchService jobFlowDispatchService;
 
+
+    /**
+     * 工作流保存
+     */
     @PostMapping("/save")
     public Mono<Result<String>> save(@RequestBody JobFlowVO jobFlowVO) {
         jobFlowService.save(jobFlowVO);
         return Mono.just(Result.success("saved"));
     }
 
+
+    /**
+     * 删除工作流
+     */
     @GetMapping("/delete/{jobFlowId}")
     public Mono<Result<String>> delete(@PathVariable("jobFlowId") Long jobFlowId) {
         jobFlowService.delete(jobFlowId);
         return Mono.just(Result.success("deleted"));
     }
 
+
+    /**
+     * 工作流列表
+     */
     @GetMapping("/list")
     public Mono<TableInfo<JobFlow>> list(@RequestBody JobFlowVO jobFlowVO) {
         startPage();
@@ -39,6 +51,10 @@ public class JobFlowController extends BaseController {
         return Mono.just(tableInfo);
     }
 
+
+    /**
+     * 工作流详情
+     */
     @GetMapping("/detail/{jobFlowId}")
     public Mono<Result<JobFlowVO>> detail(@PathVariable("jobFlowId") Long jobFlowId) {
         JobFlowVO jobFlow = jobFlowService.detail(jobFlowId);
@@ -92,6 +108,7 @@ public class JobFlowController extends BaseController {
         TableInfo<JobFlowInstance> tableInfo = jobFlowService.instanceList(jobFlowVO);
         return Mono.just(tableInfo);
     }
+
 
     /**
      * 工作流进度

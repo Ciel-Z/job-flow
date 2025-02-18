@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Callable;
 
+/**
+ * worker 上报任务日志处理
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

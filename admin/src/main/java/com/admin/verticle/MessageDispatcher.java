@@ -20,6 +20,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+/**
+ * 消息分发器
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

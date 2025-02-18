@@ -10,11 +10,13 @@ import com.alibaba.fastjson2.JSON;
 import com.common.dag.NodeEdgeDAG;
 import com.common.entity.JobFlow;
 import com.common.entity.JobFlowInstance;
+import com.common.entity.JobInfo;
 import com.common.util.AssertUtils;
 import com.common.util.DAGUtil;
 import com.github.pagehelper.Page;
 import com.google.common.collect.Sets;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobFlowServiceImpl implements JobFlowService {
@@ -40,7 +43,8 @@ public class JobFlowServiceImpl implements JobFlowService {
 
         // Validate Job
         Set<Long> jobIds = jobFlowVO.getDag().getNodes().stream().map(NodeEdgeDAG.Node::getJobId).collect(Collectors.toSet());
-        Set<Long> existJobIds = jobInfoMapper.selectIdByIds(jobIds);
+        List<JobInfo> existJobs = jobInfoMapper.selectByIds(jobIds);
+        Set<Long> existJobIds = existJobs.stream().map(JobInfo::getJobId).collect(Collectors.toSet());
         List<Long> errorJobIds = Sets.difference(jobIds, existJobIds).stream().toList();
         AssertUtils.isTrue(errorJobIds.isEmpty(), "Job {} not exists", errorJobIds);
 

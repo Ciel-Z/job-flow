@@ -35,6 +35,11 @@ public interface JobInstanceMapper {
     @Delete("delete from t_job_instance where job_id = #{jobId}")
     void deleteByJobId(Long jobId);
 
+    /**
+     * 根据任务事件更新任务状态, 任务为非终止状态时更新
+     *
+     * @param jobReport
+     */
     void updateByEvent(JobReport jobReport);
 
     /**
@@ -50,4 +55,11 @@ public interface JobInstanceMapper {
      * @param ids 实例ID
      */
     void updateTimeoutByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 更新工作流实例下任务实例被终止
+     *
+     * @param flowInstanceId 工作流实例ID
+     */
+    void updateStopByFlowInstanceId(@Param("flowInstanceId") Long flowInstanceId);
 }
