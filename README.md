@@ -4,6 +4,10 @@
 
 轻量级分布式任务调度系统，基于 **Hazelcast** 构建提供动态扩展的调度能力。 支持 cron，api 方式进行触发。支持对工作流进行 DAG 级别的调度和局部重试，外部依赖仅需数据库。
 
+
+![工作流调度](https://github.com/user-attachments/assets/25ec5ba2-c62c-403a-b350-5d99bf1fbf9a)
+
+
 ## ✨ 功能特性
 
 ### 🖥️ 集群管理
