@@ -176,7 +176,7 @@ public class ScheduleService implements InitializingBean {
             List<JobFlowInstance> jobFlowInstances = jobFlowInstanceMapper.selectByIds(flowInstanceMap.keySet());
             for (JobFlowInstance flowInstance : jobFlowInstances) {
                 JobFlowDAG dag = flowInstance.getJobFlowDAG();
-                for (JobInstance instance : flowInstanceMap.get(flowInstance.getFlowId())) {
+                for (JobInstance instance : flowInstanceMap.get(flowInstance.getId())) {
                     NodeEdgeDAG.Node node = dag.getNode(instance.getFlowNodeId()).getNode();
                     BeanUtils.copyProperties(instance, node);
                 }

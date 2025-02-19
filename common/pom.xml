@@ -23,6 +23,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <google.guava.version>33.1.0-jre</google.guava.version>
+        <vertx-hazelcast.version>4.5.11</vertx-hazelcast.version>
     </properties>
 
     <dependencies>
@@ -46,20 +48,19 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-hazelcast</artifactId>
-            <version>4.5.11</version>
+            <version>${vertx-hazelcast.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.36</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.1.0-jre</version>
+            <version>${google.guava.version}</version>
         </dependency>
 
         <dependency>
