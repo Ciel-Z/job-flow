@@ -26,7 +26,7 @@ export const jobApi = {
     return api.get(`/job/toggle/${jobId}`)
   },
   delete(jobId) {
-    return api.get(`/job/delete?/${jobId}`)
+    return api.get(`/job/delete/${jobId}`)
   },
   detail(jobId) {
     return api.get(`/job/detail/${jobId}`)

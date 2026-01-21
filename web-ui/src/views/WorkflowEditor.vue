@@ -43,7 +43,7 @@
         </div>
         <div class="palette-nodes">
           <div 
-            v-for="node in availableNodes" 
+            v-for="node in filteredNodes" 
             :key="node.type"
             class="palette-node"
             draggable="true"
