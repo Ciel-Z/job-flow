@@ -1,0 +1,127 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* n8n-style dark theme colors */
+:root {
+  --n8n-bg-primary: #1a1a1a;
+  --n8n-bg-secondary: #2a2a2a;
+  --n8n-bg-tertiary: #333333;
+  --n8n-text-primary: #ffffff;
+  --n8n-text-secondary: #a0a0a0;
+  --n8n-border-color: #404040;
+  --n8n-accent-color: #ff6d5a;
+  --n8n-accent-hover: #ff8577;
+  --n8n-success-color: #4caf50;
+  --n8n-warning-color: #ff9800;
+  --n8n-error-color: #f44336;
+  --n8n-info-color: #2196f3;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--n8n-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--n8n-bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #505050;
+}
+
+/* Element Plus theme overrides */
+.el-menu {
+  border-right: none !important;
+}
+
+.dark-theme {
+  background-color: var(--n8n-bg-primary);
+  color: var(--n8n-text-primary);
+}
+
+.dark-theme .el-menu {
+  background-color: var(--n8n-bg-secondary) !important;
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-menu-item {
+  color: var(--n8n-text-secondary) !important;
+}
+
+.dark-theme .el-menu-item:hover,
+.dark-theme .el-menu-item.is-active {
+  background-color: var(--n8n-bg-tertiary) !important;
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-card {
+  background-color: var(--n8n-bg-secondary) !important;
+  border-color: var(--n8n-border-color) !important;
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-table {
+  background-color: var(--n8n-bg-secondary) !important;
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-table th,
+.dark-theme .el-table tr {
+  background-color: var(--n8n-bg-tertiary) !important;
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-table td {
+  border-color: var(--n8n-border-color) !important;
+}
+
+.dark-theme .el-input__wrapper {
+  background-color: var(--n8n-bg-tertiary) !important;
+  box-shadow: none !important;
+}
+
+.dark-theme .el-input__inner {
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-dialog {
+  background-color: var(--n8n-bg-secondary) !important;
+  color: var(--n8n-text-primary) !important;
+}
+
+.dark-theme .el-form-item__label {
+  color: var(--n8n-text-primary) !important;
+}
+
+/* Vue Flow custom styles for n8n-like appearance */
+.vue-flow__node {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.vue-flow__node.selected {
+  box-shadow: 0 0 0 3px var(--n8n-accent-color);
+}
+
+.vue-flow__edge-path {
+  stroke-width: 2;
+}
+
+.vue-flow__edge.selected .vue-flow__edge-path {
+  stroke: var(--n8n-accent-color);
+}
