@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Flow - 分布式任务调度系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Job Flow 管理控制台</h1>
+            <nav>
+                <button class="nav-btn active" data-page="jobs">任务管理</button>
+                <button class="nav-btn" data-page="workflows">工作流管理</button>
+                <button class="nav-btn" data-page="instances">任务实例</button>
+                <button class="nav-btn" data-page="monitor">实时监控</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- 任务管理页面 -->
+            <section id="jobs-page" class="page active">
+                <div class="page-header">
+                    <h2>任务管理</h2>
+                    <button class="btn btn-primary" onclick="showJobModal()">+ 新建任务</button>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" id="job-search" placeholder="搜索任务名称...">
+                    <button class="btn" onclick="loadJobs()">搜索</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="jobs-table">
+                        <thead>
+                            <tr>
+                                <th>任务ID</th>
+                                <th>任务名称</th>
+                                <th>Cron表达式</th>
+                                <th>处理器</th>
+                                <th>调度策略</th>
+                                <th>状态</th>
+                                <th>下次触发时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobs-tbody">
+                            <tr><td colspan="8" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 工作流管理页面 -->
+            <section id="workflows-page" class="page">
+                <div class="page-header">
+                    <h2>工作流管理</h2>
+                    <button class="btn btn-primary" onclick="showWorkflowModal()">+ 新建工作流</button>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="workflow-search" placeholder="搜索工作流名称...">
+                    <button class="btn" onclick="loadWorkflows()">搜索</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="workflows-table">
+                        <thead>
+                            <tr>
+                                <th>工作流ID</th>
+                                <th>名称</th>
+                                <th>创建时间</th>
+                                <th>更新时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workflows-tbody">
+                            <tr><td colspan="5" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 任务实例页面 -->
+            <section id="instances-page" class="page">
+                <div class="page-header">
+                    <h2>任务实例</h2>
+                </div>
+
+                <div class="search-bar">
+                    <input type="number" id="instance-job-id" placeholder="任务ID">
+                    <select id="instance-status">
+                        <option value="">全部状态</option>
+                        <option value="0">等待Worker接收</option>
+                        <option value="1">运行中</option>
+                        <option value="2">失败</option>
+                        <option value="3">成功</option>
+                        <option value="4">暂停</option>
+                    </select>
+                    <button class="btn" onclick="loadInstances()">搜索</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="instances-table">
+                        <thead>
+                            <tr>
+                                <th>实例ID</th>
+                                <th>任务ID</th>
+                                <th>任务名称</th>
+                                <th>Worker地址</th>
+                                <th>触发时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instances-tbody">
+                            <tr><td colspan="7" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 实时监控页面 -->
+            <section id="monitor-page" class="page">
+                <div class="page-header">
+                    <h2>实时监控</h2>
+                    <button class="btn" id="ws-toggle" onclick="toggleWebSocket()">连接 WebSocket</button>
+                </div>
+
+                <div class="monitor-grid">
+                    <div class="monitor-card">
+                        <h3>WebSocket 状态</h3>
+                        <div id="ws-status" class="status-disconnected">未连接</div>
+                    </div>
+                    <div class="monitor-card">
+                        <h3>实时事件日志</h3>
+                        <div id="event-log" class="event-log"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 任务模态框 -->
+    <div id="job-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeJobModal()">&times;</span>
+            <h2 id="job-modal-title">新建任务</h2>
+            <form id="job-form" onsubmit="saveJob(event)">
+                <div class="form-group">
+                    <label>任务名称 *</label>
+                    <input type="text" name="jobName" required>
+                </div>
+                <div class="form-group">
+                    <label>Cron表达式</label>
+                    <input type="text" name="cron" placeholder="例如: 0 0/5 * * * ?">
+                </div>
+                <div class="form-group">
+                    <label>处理器信息 *</label>
+                    <input type="text" name="processorInfo" required placeholder="例如: com.worker.handle.DemoJobHandle">
+                </div>
+                <div class="form-group">
+                    <label>调度策略</label>
+                    <select name="dispatchStrategy">
+                        <option value="1">轮询</option>
+                        <option value="2">随机</option>
+                        <option value="3">哈希</option>
+                        <option value="4">指定Worker</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Worker Tag</label>
+                    <input type="text" name="tag">
+                </div>
+                <div class="form-group">
+                    <label>参数 (JSON格式)</label>
+                    <textarea name="params" rows="4" placeholder='{"key": "value"}'></textarea>
+                </div>
+                <div class="form-group">
+                    <label>最大重试次数</label>
+                    <input type="number" name="maxRetryTimes" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>重试间隔 (毫秒)</label>
+                    <input type="number" name="retryInterval" value="1000" min="0">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="closeJobModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 工作流模态框 -->
+    <div id="workflow-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeWorkflowModal()">&times;</span>
+            <h2>新建工作流</h2>
+            <form id="workflow-form" onsubmit="saveWorkflow(event)">
+                <div class="form-group">
+                    <label>工作流名称 *</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>DAG定义 (JSON格式) *</label>
+                    <textarea name="dag" rows="8" required placeholder='{"nodes": [...], "edges": [...]}'></textarea>
+                </div>
+                <div class="form-group">
+                    <label>参数 (JSON格式)</label>
+                    <textarea name="params" rows="4" placeholder='{"key": "value"}'></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="closeWorkflowModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 日志模态框 -->
+    <div id="log-modal" class="modal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeLogModal()">&times;</span>
+            <h2>任务日志</h2>
+            <div id="log-content" class="log-content">
+                <p class="loading">加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
