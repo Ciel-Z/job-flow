@@ -63,6 +63,7 @@ const currentPageTitle = computed(() => {
     '/jobs': '任务管理',
     '/workflows': '工作流管理',
     '/workflow/edit': '工作流编辑器',
+    '/workflow/view': '工作流执行',
     '/instances': '执行实例',
     '/monitor': '实时监控'
   }

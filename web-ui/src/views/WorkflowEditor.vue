@@ -69,6 +69,8 @@
           @dragover="onDragOver"
           @node-click="onNodeClick"
           @edge-click="onEdgeClick"
+          @connect="onConnect"
+          :connect-on-click="true"
           class="vue-flow-container"
         >
           <Background pattern-color="#404040" :gap="16" />
@@ -210,6 +212,16 @@ const onNodeClick = (event) => {
 const onEdgeClick = (event) => {
   selectedEdge.value = event.edge
   selectedNode.value = null
+}
+
+const onConnect = (params) => {
+  // Add edge when nodes are connected
+  addEdges([{
+    id: `edge_${Date.now()}`,
+    source: params.source,
+    target: params.target,
+    animated: true
+  }])
 }
 
 const deleteNode = () => {

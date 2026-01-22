@@ -17,7 +17,7 @@ api.interceptors.response.use(
 // Job APIs
 export const jobApi = {
   list(params) {
-    return api.get('/job/list', { params })
+    return api.post('/job/list', params)
   },
   save(data) {
     return api.post('/job/save', data)
@@ -38,7 +38,7 @@ export const jobApi = {
     return api.post('/job/stop', data)
   },
   instanceList(params) {
-    return api.get('/job/instance/list', { params })
+    return api.post('/job/instance/list', params)
   },
   log(instanceId) {
     return api.get(`/job/log/${instanceId}`)
@@ -48,7 +48,7 @@ export const jobApi = {
 // Workflow APIs
 export const workflowApi = {
   list(params) {
-    return api.get('/job/flow/list', { params })
+    return api.post('/job/flow/list', params)
   },
   save(data) {
     return api.post('/job/flow/save', data)
@@ -69,7 +69,7 @@ export const workflowApi = {
     return api.get(`/job/flow/retry/${instanceId}/${nodeId}`)
   },
   instanceList(params) {
-    return api.get('/job/flow/instance/list', { params })
+    return api.post('/job/flow/instance/list', params)
   },
   progress(flowInstanceId) {
     return api.get(`/job/flow/progress/${flowInstanceId}`)

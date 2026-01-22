@@ -37,6 +37,10 @@
               <el-icon><Edit /></el-icon>
               编辑
             </el-button>
+            <el-button size="small" type="primary" @click="viewWorkflow(row.flowId)">
+              <el-icon><View /></el-icon>
+              查看执行
+            </el-button>
             <el-button size="small" type="success" @click="startWorkflow(row.flowId)">
               <el-icon><VideoPlay /></el-icon>
               启动
@@ -56,7 +60,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Edit, VideoPlay, Delete } from '@element-plus/icons-vue'
+import { Plus, Search, Edit, VideoPlay, Delete, View } from '@element-plus/icons-vue'
 import { workflowApi } from '@/api'
 
 const router = useRouter()
@@ -91,10 +95,19 @@ const editWorkflow = (flowId) => {
 const startWorkflow = async (flowId) => {
   try {
     const result = await workflowApi.start(flowId)
-    ElMessage.success(`工作流已启动，实例ID: ${result.data}`)
+    const instanceId = result.data
+    ElMessage.success(`工作流已启动，实例ID: ${instanceId}`)
+    // Navigate to viewer to watch execution
+    router.push(`/workflow/view/${instanceId}`)
   } catch (error) {
     ElMessage.error('启动失败')
   }
+}
+
+const viewWorkflow = (flowId) => {
+  // For viewing, we need to get the latest instance
+  // For now, just navigate to a placeholder or show a dialog to select instance
+  ElMessage.info('请先启动工作流以查看执行情况')
 }
 
 const deleteWorkflow = async (flowId) => {
